@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubits/match_cubit.dart';
+import '../models/match.dart' as model;
 import 'match_detail_screen.dart';
 
 /// Match Schedule Screen displaying upcoming and past matches
@@ -18,89 +21,23 @@ class ScheduleScreen extends StatefulWidget {
 class _ScheduleScreenState extends State<ScheduleScreen> {
   String _selectedTournament = 'All Tournaments';
 
-  final List<String> _tournaments = [
-    'All Tournaments',
-    'Batch Cup 2024',
-    '4th Year League',
-    'Half Life-Cup',
-    'GC Cup',
-  ];
+  // Removed mock data as it's no longer used.
 
-  // Mock data for demonstration
-  final List<Map<String, dynamic>> _allMatches = [
-    {
-      'homeTeam': 'Software Engineering',
-      'awayTeam': 'Computer Science',
-      'date': '2024-02-10',
-      'time': '14:00',
-      'tournament': 'Batch Cup 2024',
-      'venue': 'Main Stadium',
-      'status': 'upcoming',
-    },
-    {
-      'homeTeam': 'Information Systems',
-      'awayTeam': 'Electrical Engineering',
-      'date': '2024-02-10',
-      'time': '16:00',
-      'tournament': '4th Year League',
-      'venue': 'Training Ground',
-      'status': 'upcoming',
-    },
-    {
-      'homeTeam': 'Civil Engineering',
-      'awayTeam': 'Mechanical Engineering',
-      'date': '2024-02-11',
-      'time': '15:00',
-      'tournament': 'Half Life-Cup',
-      'venue': 'Main Stadium',
-      'status': 'upcoming',
-    },
-    {
-      'homeTeam': 'Architecture',
-      'awayTeam': 'Urban Planning',
-      'date': '2024-02-11',
-      'time': '17:00',
-      'tournament': 'GC Cup',
-      'venue': 'Training Ground',
-      'status': 'upcoming',
-    },
-    {
-      'homeTeam': 'Chemical Engineering',
-      'awayTeam': 'Bio Engineering',
-      'date': '2024-02-09',
-      'time': '14:00',
-      'tournament': 'Batch Cup 2024',
-      'venue': 'Main Stadium',
-      'status': 'finished',
-      'homeScore': 2,
-      'awayScore': 1,
-    },
-    {
-      'homeTeam': 'Mining Engineering',
-      'awayTeam': 'Geology',
-      'date': '2024-02-09',
-      'time': '16:00',
-      'tournament': '4th Year League',
-      'venue': 'Training Ground',
-      'status': 'finished',
-      'homeScore': 0,
-      'awayScore': 3,
-    },
-  ];
-
-  List<Map<String, dynamic>> get _filteredMatches {
+  List<model.Match> _getFilteredMatches(List<model.Match> allMatches) {
     if (_selectedTournament == 'All Tournaments') {
-      return _allMatches;
+      return allMatches;
     }
-    return _allMatches
-        .where((match) => match['tournament'] == _selectedTournament)
+    return allMatches
+        .where((match) => match.tournament?.name == _selectedTournament)
         .toList();
   }
 
-  Map<String, List<Map<String, dynamic>>> get _groupedMatches {
-    final Map<String, List<Map<String, dynamic>>> grouped = {};
-    for (var match in _filteredMatches) {
-      final date = match['date'] as String;
+  Map<String, List<model.Match>> _getGroupedMatches(
+    List<model.Match> filteredMatches,
+  ) {
+    final Map<String, List<model.Match>> grouped = {};
+    for (var match in filteredMatches) {
+      final date = match.startTime.toIso8601String().split('T')[0];
       if (!grouped.containsKey(date)) {
         grouped[date] = [];
       }
@@ -114,17 +51,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _handleRefresh() async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Schedule updated!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    await context.read<MatchCubit>().fetchMatches();
   }
 
   String _formatDate(String dateStr) {
@@ -162,114 +89,144 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Column(
-      children: [
-        // Tournament filter - Modern chip-style scroll
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-          child: Row(
-            children: _tournaments.map((tournament) {
-              final isSelected = _selectedTournament == tournament;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(
-                    tournament.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                      color: isSelected ? Colors.white : Colors.grey[400],
+    return BlocBuilder<MatchCubit, MatchState>(
+      builder: (context, state) {
+        // Collect all tournament names for the filter
+        final List<String> tournaments = ['All Tournaments'];
+        if (state is MatchLoaded) {
+          final set = state.matches
+              .map((m) => m.tournament?.name)
+              .whereType<String>()
+              .toSet();
+          tournaments.addAll(set);
+        }
+
+        return Column(
+          children: [
+            // Tournament filter - Modern chip-style scroll
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              child: Row(
+                children: tournaments.map((tournament) {
+                  final isSelected = _selectedTournament == tournament;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(
+                        tournament.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                          color: isSelected ? Colors.white : Colors.grey[400],
+                        ),
+                      ),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedTournament = tournament;
+                        });
+                      },
+                      backgroundColor: colorScheme.surfaceContainer,
+                      selectedColor: colorScheme.primary,
+                      checkmarkColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(
+                          color: isSelected
+                              ? Colors.transparent
+                              : Colors.white.withOpacity(0.05),
+                        ),
+                      ),
                     ),
-                  ),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedTournament = tournament;
-                    });
-                  },
-                  backgroundColor: colorScheme.surfaceContainer,
-                  selectedColor: colorScheme.primary,
-                  checkmarkColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.white.withValues(alpha: 0.05),
-                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            if (state is MatchLoading)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else if (state is MatchLoaded)
+              _buildMatchesList(state.matches, colorScheme)
+            else if (state is MatchError)
+              Expanded(child: Center(child: Text(state.message)))
+            else
+              const SizedBox(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMatchesList(
+    List<model.Match> allMatches,
+    ColorScheme colorScheme,
+  ) {
+    final filteredMatches = _getFilteredMatches(allMatches);
+    final groupedMatches = _getGroupedMatches(filteredMatches);
+
+    if (filteredMatches.isEmpty) {
+      return Expanded(child: _buildEmptyState());
+    }
+
+    return Expanded(
+      child: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: groupedMatches.length,
+          itemBuilder: (context, index) {
+            final date = groupedMatches.keys.elementAt(index);
+            final matches = groupedMatches[date]!;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Date header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 24, 0, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 3,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatDate(date).toUpperCase(),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 11,
+                          color: Colors.grey[500],
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
-
-        // Matches list
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _handleRefresh,
-            child: _filteredMatches.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _groupedMatches.length,
-                    itemBuilder: (context, index) {
-                      final date = _groupedMatches.keys.elementAt(index);
-                      final matches = _groupedMatches[date]!;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Date header
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(4, 24, 0, 16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 3,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _formatDate(date).toUpperCase(),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 11,
-                                    color: Colors.grey[500],
-                                    letterSpacing: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Matches for this date
-                          ...matches.map(
-                            (match) => InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        MatchDetailScreen(match: match),
-                                  ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(16),
-                              child: ScheduleMatchCard(match: match),
-                            ),
-                          ),
-                        ],
+                // Matches for this date
+                ...matches.map(
+                  (match) => InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MatchDetailScreen(match: match),
+                        ),
                       );
                     },
+                    borderRadius: BorderRadius.circular(16),
+                    child: ScheduleMatchCard(match: match),
                   ),
-          ),
+                ),
+              ],
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 
@@ -297,13 +254,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
 /// Schedule Match Card Widget
 class ScheduleMatchCard extends StatelessWidget {
-  final Map<String, dynamic> match;
+  final model.Match match;
 
   const ScheduleMatchCard({super.key, required this.match});
 
   @override
   Widget build(BuildContext context) {
-    final isFinished = match['status'] == 'finished';
+    final isFinished = match.status == model.MatchStatus.finished;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -328,7 +285,7 @@ class ScheduleMatchCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      (match['tournament'] as String).toUpperCase(),
+                      (match.tournament?.name ?? 'TOURNAMENT').toUpperCase(),
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
@@ -340,7 +297,7 @@ class ScheduleMatchCard extends StatelessWidget {
                 ),
               ),
               Text(
-                match['time'],
+                '${match.startTime.hour}:${match.startTime.minute.toString().padLeft(2, '0')}',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -354,7 +311,7 @@ class ScheduleMatchCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  match['homeTeam'],
+                  match.teamA?.name ?? 'Home',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -372,7 +329,7 @@ class ScheduleMatchCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    '${match['homeScore']} - ${match['awayScore']}',
+                    '${match.scoreA} - ${match.scoreB}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
@@ -390,7 +347,7 @@ class ScheduleMatchCard extends StatelessWidget {
                 ),
               Expanded(
                 child: Text(
-                  match['awayTeam'],
+                  match.teamB?.name ?? 'Away',
                   textAlign: TextAlign.right,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
@@ -410,7 +367,7 @@ class ScheduleMatchCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                match['venue'],
+                match.venue ?? 'Main Stadium, ASTU',
                 style: TextStyle(
                   fontSize: 10,
                   color: Colors.grey[600],

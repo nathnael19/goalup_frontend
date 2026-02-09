@@ -12,6 +12,7 @@ class Match {
   final int scoreB;
   final MatchStatus status;
   final DateTime startTime;
+  final String? venue;
 
   // Enriched data
   final Tournament? tournament;
@@ -27,6 +28,7 @@ class Match {
     required this.scoreB,
     required this.status,
     required this.startTime,
+    this.venue,
     this.tournament,
     this.teamA,
     this.teamB,
@@ -45,6 +47,7 @@ class Match {
         orElse: () => MatchStatus.scheduled,
       ),
       startTime: DateTime.parse(json['start_time']),
+      venue: json['venue'],
       tournament: json['tournament'] != null
           ? Tournament.fromJson(json['tournament'])
           : null,

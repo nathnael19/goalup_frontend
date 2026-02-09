@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/match.dart' as model;
 
 /// Detailed Match Screen showing timeline, stats, and lineups
 class MatchDetailScreen extends StatefulWidget {
-  final Map<String, dynamic> match;
+  final model.Match match;
 
   const MatchDetailScreen({super.key, required this.match});
 
@@ -30,13 +31,13 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final bool isLive = widget.match['status'] == 'LIVE';
+    final match = widget.match;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          (widget.match['tournament'] as String).toUpperCase(),
+          (match.tournament?.name ?? 'MATCH DETAILS').toUpperCase(),
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w900,
@@ -62,39 +63,18 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
             ),
             child: Column(
               children: [
-                if (isLive)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 20),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'LIVE • 67\'',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 10,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
                 Row(
                   children: [
                     Expanded(
                       child: _buildTeamInfo(
-                        widget.match['homeTeam'],
+                        match.teamA?.name ?? 'T1',
                         isHome: true,
                       ),
                     ),
-                    _buildScore(widget.match),
+                    _buildScoreInfo(match),
                     Expanded(
                       child: _buildTeamInfo(
-                        widget.match['awayTeam'],
+                        match.teamB?.name ?? 'T2',
                         isHome: false,
                       ),
                     ),
@@ -102,7 +82,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  widget.match['venue'] ?? 'Main Stadium, ASTU',
+                  match.venue ?? 'Main Stadium, ASTU',
                   style: TextStyle(
                     color: Colors.grey[500],
                     fontSize: 12,
@@ -152,23 +132,20 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     );
   }
 
-  Widget _buildTeamInfo(String name, {required bool isHome}) {
+  Widget _buildTeamInfo(String teamName, {required bool isHome}) {
     return Column(
       children: [
         Container(
           width: 70,
           height: 70,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.03),
+            color: Colors.white.withOpacity(0.03),
             shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.05),
-              width: 2,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.05), width: 2),
           ),
           child: Center(
             child: Text(
-              name.substring(0, 1),
+              teamName.substring(0, 1),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 32,
@@ -179,7 +156,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
         ),
         const SizedBox(height: 12),
         Text(
-          name,
+          teamName,
           textAlign: TextAlign.center,
           style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
         ),
@@ -187,57 +164,33 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     );
   }
 
-  Widget _buildScore(Map<String, dynamic> match) {
-    if (match['status'] == 'upcoming') {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Text(
-          'VS',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-            color: Colors.white24,
-          ),
-        ),
-      );
-    }
+  Widget _buildScoreInfo(model.Match match) {
+    final isLive = match.status == model.MatchStatus.live;
     return Column(
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${match['homeScore']}',
-              style: const TextStyle(
-                fontSize: 56,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -2,
-              ),
+        Text(
+          '${match.scoreA} - ${match.scoreB}',
+          style: const TextStyle(
+            fontSize: 48,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -2,
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: isLive ? Colors.red : Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            isLive ? '67\'' : 'FINAL',
+            style: TextStyle(
+              color: isLive ? Colors.white : Colors.grey[400],
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                ':',
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white24,
-                ),
-              ),
-            ),
-            Text(
-              '${match['awayScore']}',
-              style: const TextStyle(
-                fontSize: 56,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -2,
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -481,14 +434,14 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          _buildTeamLineup(widget.match['homeTeam'], [
+          _buildTeamLineup(widget.match.teamA?.name ?? 'Home', [
             'J. Doe (GK)',
             'M. Smith',
             'A. Johnson',
             'K. Williams',
           ]),
           const SizedBox(height: 32),
-          _buildTeamLineup(widget.match['awayTeam'], [
+          _buildTeamLineup(widget.match.teamB?.name ?? 'Away', [
             'L. Brown (GK)',
             'P. Davis',
             'R. Miller',

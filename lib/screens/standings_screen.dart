@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubits/standings_cubit.dart';
+import '../models/standing.dart' as model;
 
 /// Standings Screen displaying tournament leaderboards
 ///
@@ -15,276 +18,109 @@ class StandingsScreen extends StatefulWidget {
   State<StandingsScreen> createState() => _StandingsScreenState();
 }
 
-class _StandingsScreenState extends State<StandingsScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  final List<String> _tournaments = [
-    'Batch Cup 2024',
-    '4th Year League',
-    'Half Life-Cup',
-    'GC Cup',
-  ];
-
-  // Mock standings data for each tournament
-  final Map<String, List<Map<String, dynamic>>> _standingsData = {
-    'Batch Cup 2024': [
-      {
-        'rank': 1,
-        'team': 'Software Engineering',
-        'played': 8,
-        'won': 6,
-        'drawn': 1,
-        'lost': 1,
-        'goalsFor': 18,
-        'goalsAgainst': 7,
-        'points': 19,
-      },
-      {
-        'rank': 2,
-        'team': 'Computer Science',
-        'played': 8,
-        'won': 5,
-        'drawn': 2,
-        'lost': 1,
-        'goalsFor': 16,
-        'goalsAgainst': 8,
-        'points': 17,
-      },
-      {
-        'rank': 3,
-        'team': 'Information Systems',
-        'played': 8,
-        'won': 5,
-        'drawn': 1,
-        'lost': 2,
-        'goalsFor': 14,
-        'goalsAgainst': 9,
-        'points': 16,
-      },
-      {
-        'rank': 4,
-        'team': 'Chemical Engineering',
-        'played': 8,
-        'won': 3,
-        'drawn': 2,
-        'lost': 3,
-        'goalsFor': 11,
-        'goalsAgainst': 12,
-        'points': 11,
-      },
-      {
-        'rank': 5,
-        'team': 'Bio Engineering',
-        'played': 8,
-        'won': 2,
-        'drawn': 3,
-        'lost': 3,
-        'goalsFor': 9,
-        'goalsAgainst': 11,
-        'points': 9,
-      },
-      {
-        'rank': 6,
-        'team': 'Mining Engineering',
-        'played': 8,
-        'won': 0,
-        'drawn': 1,
-        'lost': 7,
-        'goalsFor': 4,
-        'goalsAgainst': 25,
-        'points': 1,
-      },
-    ],
-    '4th Year League': [
-      {
-        'rank': 1,
-        'team': 'Electrical Engineering',
-        'played': 6,
-        'won': 5,
-        'drawn': 1,
-        'lost': 0,
-        'goalsFor': 15,
-        'goalsAgainst': 3,
-        'points': 16,
-      },
-      {
-        'rank': 2,
-        'team': 'Mechanical Engineering',
-        'played': 6,
-        'won': 4,
-        'drawn': 0,
-        'lost': 2,
-        'goalsFor': 12,
-        'goalsAgainst': 8,
-        'points': 12,
-      },
-      {
-        'rank': 3,
-        'team': 'Civil Engineering',
-        'played': 6,
-        'won': 3,
-        'drawn': 1,
-        'lost': 2,
-        'goalsFor': 10,
-        'goalsAgainst': 9,
-        'points': 10,
-      },
-      {
-        'rank': 4,
-        'team': 'Architecture',
-        'played': 6,
-        'won': 0,
-        'drawn': 0,
-        'lost': 6,
-        'goalsFor': 2,
-        'goalsAgainst': 19,
-        'points': 0,
-      },
-    ],
-    'Half Life-Cup': [
-      {
-        'rank': 1,
-        'team': 'Urban Planning',
-        'played': 5,
-        'won': 4,
-        'drawn': 1,
-        'lost': 0,
-        'goalsFor': 12,
-        'goalsAgainst': 4,
-        'points': 13,
-      },
-      {
-        'rank': 2,
-        'team': 'Geology',
-        'played': 5,
-        'won': 3,
-        'drawn': 1,
-        'lost': 1,
-        'goalsFor': 9,
-        'goalsAgainst': 6,
-        'points': 10,
-      },
-      {
-        'rank': 3,
-        'team': 'Environmental Engineering',
-        'played': 5,
-        'won': 1,
-        'drawn': 1,
-        'lost': 3,
-        'goalsFor': 5,
-        'goalsAgainst': 10,
-        'points': 4,
-      },
-    ],
-    'GC Cup': [
-      {
-        'rank': 1,
-        'team': 'Software Engineering',
-        'played': 4,
-        'won': 3,
-        'drawn': 1,
-        'lost': 0,
-        'goalsFor': 10,
-        'goalsAgainst': 3,
-        'points': 10,
-      },
-      {
-        'rank': 2,
-        'team': 'Electrical Engineering',
-        'played': 4,
-        'won': 2,
-        'drawn': 1,
-        'lost': 1,
-        'goalsFor': 7,
-        'goalsAgainst': 5,
-        'points': 7,
-      },
-      {
-        'rank': 3,
-        'team': 'Civil Engineering',
-        'played': 4,
-        'won': 0,
-        'drawn': 0,
-        'lost': 4,
-        'goalsFor': 2,
-        'goalsAgainst': 11,
-        'points': 0,
-      },
-    ],
-  };
-
+class _StandingsScreenState extends State<StandingsScreen> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tournaments.length, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _handleRefresh() async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Standings updated!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    await context.read<StandingsCubit>().fetchStandings();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Tournament tabs
-        TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          dividerColor: Colors.transparent,
-          indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.w900,
-            fontSize: 13,
-            letterSpacing: 0.5,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-          tabs: _tournaments.map((tournament) {
-            return Tab(text: tournament.toUpperCase());
-          }).toList(),
+    return BlocBuilder<StandingsCubit, StandingsState>(
+      builder: (context, state) {
+        if (state is StandingsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is StandingsLoaded) {
+          final groupedTournaments = state.tournaments;
+
+          if (groupedTournaments.isEmpty) {
+            return RefreshIndicator(
+              onRefresh: _handleRefresh,
+              child: _buildEmptyStandingsState(),
+            );
+          }
+
+          return DefaultTabController(
+            length: groupedTournaments.length,
+            child: Column(
+              children: [
+                TabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    letterSpacing: 0.5,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  tabs: groupedTournaments.map<Widget>((g) {
+                    final t = g['tournament'];
+                    return Tab(text: (t['name'] as String).toUpperCase());
+                  }).toList(),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: groupedTournaments.map<Widget>((g) {
+                      final List<dynamic> teamsJson = g['teams'];
+                      final List<model.Standing> standings = teamsJson
+                          .map((s) => model.Standing.fromJson(s))
+                          .toList();
+
+                      return RefreshIndicator(
+                        onRefresh: _handleRefresh,
+                        child: StandingsTable(standings: standings),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else if (state is StandingsError) {
+          return Center(child: Text(state.message));
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildEmptyStandingsState() {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey[800]),
+            const SizedBox(height: 16),
+            Text(
+              'No standings available',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-        // Standings table
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: _tournaments.map((tournament) {
-              final standings = _standingsData[tournament] ?? [];
-              return RefreshIndicator(
-                onRefresh: _handleRefresh,
-                child: StandingsTable(standings: standings),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
 /// Standings Table Widget
 class StandingsTable extends StatelessWidget {
-  final List<Map<String, dynamic>> standings;
+  final List<model.Standing> standings;
 
   const StandingsTable({super.key, required this.standings});
 
@@ -378,9 +214,10 @@ class StandingsTable extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: standings.length,
             itemBuilder: (context, index) {
-              final team = standings[index];
-              final goalDifference = team['goalsFor'] - team['goalsAgainst'];
-              final isTopThree = team['rank'] <= 3;
+              final standing = standings[index];
+              final goalDifference = standing.goalsFor - standing.goalsAgainst;
+              final rank = index + 1;
+              final isTopThree = rank <= 3;
               final bool isLast = index == standings.length - 1;
 
               return Container(
@@ -405,16 +242,16 @@ class StandingsTable extends StatelessWidget {
                     SizedBox(
                       width: 32,
                       child: Text(
-                        '${team['rank']}',
+                        '$rank',
                         style: TextStyle(
                           fontWeight: isTopThree
                               ? FontWeight.w900
                               : FontWeight.bold,
-                          color: team['rank'] == 1
+                          color: rank == 1
                               ? Colors.amber
-                              : team['rank'] == 2
+                              : rank == 2
                               ? Colors.grey[400]
-                              : team['rank'] == 3
+                              : rank == 3
                               ? Colors.brown[300]
                               : Colors.grey[500],
                           fontSize: 13,
@@ -425,7 +262,7 @@ class StandingsTable extends StatelessWidget {
                     Expanded(
                       flex: 3,
                       child: Text(
-                        team['team'],
+                        standing.team?.name ?? 'UNKNOWN',
                         style: TextStyle(
                           fontWeight: isTopThree
                               ? FontWeight.w900
@@ -437,10 +274,10 @@ class StandingsTable extends StatelessWidget {
                       ),
                     ),
                     // Stats
-                    _buildStatCell('${team['played']}'),
-                    _buildStatCell('${team['won']}'),
-                    _buildStatCell('${team['drawn']}'),
-                    _buildStatCell('${team['lost']}'),
+                    _buildStatCell('${standing.played}'),
+                    _buildStatCell('${standing.won}'),
+                    _buildStatCell('${standing.drawn}'),
+                    _buildStatCell('${standing.lost}'),
                     _buildStatCell(
                       goalDifference >= 0
                           ? '+$goalDifference'
@@ -455,7 +292,7 @@ class StandingsTable extends StatelessWidget {
                     SizedBox(
                       width: 32,
                       child: Text(
-                        '${team['points']}',
+                        '${standing.points}',
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontWeight: FontWeight.w900,

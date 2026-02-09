@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubits/match_cubit.dart';
+import '../models/match.dart' as model;
 import 'match_detail_screen.dart';
 
 /// Live Scores Screen displaying ongoing and recent matches
@@ -16,85 +19,51 @@ class LiveScoresScreen extends StatefulWidget {
 }
 
 class _LiveScoresScreenState extends State<LiveScoresScreen> {
-  // Mock data for demonstration
-  final List<Map<String, dynamic>> _matches = [
-    {
-      'homeTeam': 'Software Engineering',
-      'awayTeam': 'Computer Science',
-      'homeScore': 2,
-      'awayScore': 1,
-      'status': 'LIVE',
-      'time': '67\'',
-      'tournament': 'Batch Cup 2024',
-    },
-    {
-      'homeTeam': 'Information Systems',
-      'awayTeam': 'Electrical Engineering',
-      'homeScore': 0,
-      'awayScore': 0,
-      'status': 'LIVE',
-      'time': '23\'',
-      'tournament': '4th Year League',
-    },
-    {
-      'homeTeam': 'Civil Engineering',
-      'awayTeam': 'Mechanical Engineering',
-      'homeScore': 3,
-      'awayScore': 2,
-      'status': 'FT',
-      'time': 'Full Time',
-      'tournament': 'Half Life-Cup',
-    },
-    {
-      'homeTeam': 'Architecture',
-      'awayTeam': 'Urban Planning',
-      'homeScore': 1,
-      'awayScore': 1,
-      'status': 'HT',
-      'time': 'Half Time',
-      'tournament': 'GC Cup',
-    },
-  ];
-
   Future<void> _handleRefresh() async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Scores updated!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    await context.read<MatchCubit>().fetchMatches();
   }
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: _handleRefresh,
-      child: _matches.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _matches.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            MatchDetailScreen(match: _matches[index]),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: MatchCard(match: _matches[index]),
-                );
-              },
-            ),
+    return BlocBuilder<MatchCubit, MatchState>(
+      builder: (context, state) {
+        if (state is MatchLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is MatchLoaded) {
+          final liveMatches = context.read<MatchCubit>().getLiveMatches(
+            state.matches,
+          );
+
+          return RefreshIndicator(
+            onRefresh: _handleRefresh,
+            child: liveMatches.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: liveMatches.length,
+                    itemBuilder: (context, index) {
+                      final match = liveMatches[index];
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  MatchDetailScreen(match: match),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: MatchCard(match: match),
+                      );
+                    },
+                  ),
+          );
+        } else if (state is MatchError) {
+          return Center(child: Text(state.message));
+        }
+        return const SizedBox();
+      },
     );
   }
 
@@ -125,13 +94,13 @@ class _LiveScoresScreenState extends State<LiveScoresScreen> {
 }
 
 class MatchCard extends StatelessWidget {
-  final Map<String, dynamic> match;
+  final model.Match match;
 
   const MatchCard({super.key, required this.match});
 
   @override
   Widget build(BuildContext context) {
-    final isLive = match['status'] == 'LIVE';
+    final isLive = match.status == model.MatchStatus.live;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -163,7 +132,7 @@ class MatchCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      match['tournament'].toUpperCase(),
+                      (match.tournament?.name ?? 'TOURNAMENT').toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
@@ -194,7 +163,7 @@ class MatchCard extends StatelessWidget {
                   )
                 else
                   Text(
-                    match['status'],
+                    match.status.name.toUpperCase(),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -211,10 +180,10 @@ class MatchCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      _buildTeamLogo(match['homeTeam']),
+                      _buildTeamLogo(match.teamA?.name ?? 'T1'),
                       const SizedBox(height: 12),
                       Text(
-                        match['homeTeam'],
+                        match.teamA?.name ?? 'T1',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
@@ -232,7 +201,7 @@ class MatchCard extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        '${match['homeScore']} - ${match['awayScore']}',
+                        '${match.scoreA} - ${match.scoreB}',
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
@@ -241,7 +210,7 @@ class MatchCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        match['time'],
+                        isLive ? '67\'' : 'Final', // Mocking time for now
                         style: TextStyle(
                           fontSize: 12,
                           color: isLive ? Colors.red : Colors.grey[400],
@@ -257,10 +226,10 @@ class MatchCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      _buildTeamLogo(match['awayTeam']),
+                      _buildTeamLogo(match.teamB?.name ?? 'T2'),
                       const SizedBox(height: 12),
                       Text(
-                        match['awayTeam'],
+                        match.teamB?.name ?? 'T2',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubits/teams_cubit.dart';
+import '../models/team.dart' as model;
 import 'team_detail_screen.dart';
 
 /// Screen displaying a directory of all teams
@@ -13,87 +16,15 @@ class _TeamsScreenState extends State<TeamsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  final List<Map<String, dynamic>> _teams = [
-    {
-      'name': 'Software Engineering',
-      'tournament': 'Batch Cup 2024',
-      'members': 14,
-      'color': Colors.blue,
-    },
-    {
-      'name': 'Computer Science',
-      'tournament': 'Batch Cup 2024',
-      'members': 12,
-      'color': Colors.indigo,
-    },
-    {
-      'name': 'Information Systems',
-      'tournament': 'Batch Cup 2024',
-      'members': 15,
-      'color': Colors.teal,
-    },
-    {
-      'name': 'Electrical Engineering',
-      'tournament': '4th Year League',
-      'members': 14,
-      'color': Colors.orange,
-    },
-    {
-      'name': 'Mechanical Engineering',
-      'tournament': '4th Year League',
-      'members': 16,
-      'color': Colors.red,
-    },
-    {
-      'name': 'Civil Engineering',
-      'tournament': '4th Year League',
-      'members': 15,
-      'color': Colors.brown,
-    },
-    {
-      'name': 'Architecture',
-      'tournament': '4th Year League',
-      'members': 12,
-      'color': Colors.purple,
-    },
-    {
-      'name': 'Chemical Engineering',
-      'tournament': 'Batch Cup 2024',
-      'members': 14,
-      'color': Colors.green,
-    },
-    {
-      'name': 'Bio Engineering',
-      'tournament': 'Batch Cup 2024',
-      'members': 13,
-      'color': Colors.lightGreen,
-    },
-    {
-      'name': 'Mining Engineering',
-      'tournament': 'Batch Cup 2024',
-      'members': 11,
-      'color': Colors.grey,
-    },
-    {
-      'name': 'Urban Planning',
-      'tournament': 'Half Life-Cup',
-      'members': 12,
-      'color': Colors.cyan,
-    },
-    {
-      'name': 'Geology',
-      'tournament': 'Half Life-Cup',
-      'members': 14,
-      'color': Colors.deepOrange,
-    },
-  ];
-
-  List<Map<String, dynamic>> get _filteredTeams {
-    if (_searchQuery.isEmpty) return _teams;
-    return _teams.where((team) {
-      return team['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          team['tournament'].toLowerCase().contains(_searchQuery.toLowerCase());
+  List<model.Team> _getFilteredTeams(List<model.Team> allTeams) {
+    if (_searchQuery.isEmpty) return allTeams;
+    return allTeams.where((team) {
+      return team.name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
+  }
+
+  Future<void> _handleRefresh() async {
+    await context.read<TeamsCubit>().fetchTeams();
   }
 
   @override
@@ -129,35 +60,61 @@ class _TeamsScreenState extends State<TeamsScreen> {
 
         // Teams Grid
         Expanded(
-          child: _filteredTeams.isEmpty
-              ? _buildEmptyState()
-              : GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.85,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
+          child: BlocBuilder<TeamsCubit, TeamsState>(
+            builder: (context, state) {
+              if (state is TeamsLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is TeamsLoaded) {
+                final filteredTeams = _getFilteredTeams(state.teams);
+
+                if (filteredTeams.isEmpty) {
+                  return RefreshIndicator(
+                    onRefresh: _handleRefresh,
+                    child: _buildEmptyState(),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: _handleRefresh,
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.85,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                    itemCount: filteredTeams.length,
+                    itemBuilder: (context, index) {
+                      final team = filteredTeams[index];
+                      return _buildTeamCard(team);
+                    },
                   ),
-                  itemCount: _filteredTeams.length,
-                  itemBuilder: (context, index) {
-                    final team = _filteredTeams[index];
-                    return _buildTeamCard(team);
-                  },
-                ),
+                );
+              } else if (state is TeamsError) {
+                return Center(child: Text(state.message));
+              }
+              return const SizedBox();
+            },
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildTeamCard(Map<String, dynamic> team) {
+  Widget _buildTeamCard(model.Team team) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return InkWell(
       onTap: () {
+        // We'll keep Map for now if TeamDetailScreen expects it,
+        // but ideally it should use model.Team
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => TeamDetailScreen(team: team)),
+          MaterialPageRoute(
+            builder: (context) => TeamDetailScreen(team: team.toJson()),
+          ),
         );
       },
       borderRadius: BorderRadius.circular(20),
@@ -175,14 +132,14 @@ class _TeamsScreenState extends State<TeamsScreen> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: (team['color'] as Color).withValues(alpha: 0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Text(
-                  team['name'][0],
+                  team.name[0],
                   style: TextStyle(
-                    color: team['color'],
+                    color: colorScheme.primary,
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
                   ),
@@ -191,7 +148,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              team['name'],
+              team.name,
               textAlign: TextAlign.center,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               maxLines: 1,
@@ -199,7 +156,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              (team['tournament'] as String).toUpperCase(),
+              'TEAM', // We don't have tournament name in Team model yet
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey[600],
@@ -215,9 +172,9 @@ class _TeamsScreenState extends State<TeamsScreen> {
                 color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                '${team['members']} PLAYERS',
-                style: const TextStyle(
+              child: const Text(
+                '14 PLAYERS', // Mock for now
+                style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                   color: Colors.white70,
