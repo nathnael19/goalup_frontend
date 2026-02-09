@@ -112,9 +112,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
         // but ideally it should use model.Team
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => TeamDetailScreen(team: team.toJson()),
-          ),
+          MaterialPageRoute(builder: (context) => TeamDetailScreen(team: team)),
         );
       },
       borderRadius: BorderRadius.circular(20),

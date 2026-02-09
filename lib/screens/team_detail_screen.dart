@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/team.dart' as model;
 
 /// Detailed view for a specific team
 class TeamDetailScreen extends StatefulWidget {
-  final Map<String, dynamic> team;
+  final model.Team team;
 
   const TeamDetailScreen({super.key, required this.team});
 
@@ -34,7 +35,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          (team['name'] as String).toUpperCase(),
+          team.name.toUpperCase(),
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w900,
@@ -61,18 +62,18 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: (team['color'] as Color).withValues(alpha: 0.1),
+                    color: colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: (team['color'] as Color).withValues(alpha: 0.2),
+                      color: colorScheme.primary.withValues(alpha: 0.2),
                       width: 4,
                     ),
                   ),
                   child: Center(
                     child: Text(
-                      team['name'][0],
+                      team.name.isNotEmpty ? team.name[0] : 'T',
                       style: TextStyle(
-                        color: team['color'],
+                        color: colorScheme.primary,
                         fontSize: 48,
                         fontWeight: FontWeight.w900,
                       ),
@@ -81,7 +82,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  team['name'],
+                  team.name,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
@@ -89,7 +90,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  (team['tournament'] as String).toUpperCase(),
+                  team.batch.toUpperCase(),
                   style: TextStyle(
                     color: colorScheme.primary,
                     fontWeight: FontWeight.w900,

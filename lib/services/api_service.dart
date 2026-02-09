@@ -1,10 +1,21 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/match.dart';
 import '../models/team.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8000/api/v1';
+    }
+    if (Platform.isAndroid) {
+      // 10.0.2.2 is the special IP for Android Emulator to access host machine
+      return 'http://10.0.2.2:8000/api/v1';
+    }
+    return 'http://127.0.0.1:8000/api/v1';
+  }
 
   // --- Matches ---
   Future<List<Match>> getMatches() async {
