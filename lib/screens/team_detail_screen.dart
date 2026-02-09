@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/team.dart' as model;
+import '../models/player.dart';
+import '../services/api_service.dart';
 
 /// Detailed view for a specific team
 class TeamDetailScreen extends StatefulWidget {
@@ -14,11 +16,36 @@ class TeamDetailScreen extends StatefulWidget {
 class _TeamDetailScreenState extends State<TeamDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late model.Team _detailedTeam;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _detailedTeam = widget.team;
+    _fetchTeamDetail();
+  }
+
+  Future<void> _fetchTeamDetail() async {
+    try {
+      final apiService = ApiService();
+      final detailedTeam = await apiService.getTeam(widget.team.id);
+      if (mounted) {
+        setState(() {
+          _detailedTeam = detailedTeam;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -30,12 +57,11 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final team = widget.team;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          team.name.toUpperCase(),
+          _detailedTeam.name.toUpperCase(),
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w900,
@@ -43,110 +69,123 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // Premium Team Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainer,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(40),
-                bottomRight: Radius.circular(40),
-              ),
-            ),
-            child: Column(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(child: Text(_error!))
+          : Column(
               children: [
+                // Premium Team Header
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 32,
+                    horizontal: 20,
+                  ),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.2),
-                      width: 4,
+                    color: colorScheme.surfaceContainer,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(40),
+                      bottomRight: Radius.circular(40),
                     ),
                   ),
-                  child: Center(
-                    child: Text(
-                      team.name.isNotEmpty ? team.name[0] : 'T',
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.2),
+                            width: 4,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _detailedTeam.name.isNotEmpty
+                                ? _detailedTeam.name[0]
+                                : 'T',
+                            style: TextStyle(
+                              color: colorScheme.primary,
+                              fontSize: 48,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                      Text(
+                        _detailedTeam.name,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _detailedTeam.batch.toUpperCase(),
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildQuickStat('RANK', _getRank()),
+                          _buildDivider(),
+                          _buildQuickStat('POINTS', _getPoints()),
+                          _buildDivider(),
+                          _buildQuickStat(
+                            'FORM',
+                            'W W D L W', // Keeping mock form for now
+                            isForm: true,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  team.name,
-                  style: const TextStyle(
-                    fontSize: 24,
+
+                // Tabs
+                TabBar(
+                  controller: _tabController,
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  labelStyle: const TextStyle(
                     fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    letterSpacing: 0.5,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  team.batch.toUpperCase(),
-                  style: TextStyle(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
-                    letterSpacing: 1,
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
                   ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildQuickStat('RANK', '4th'),
-                    _buildDivider(),
-                    _buildQuickStat('POINTS', '19'),
-                    _buildDivider(),
-                    _buildQuickStat('FORM', 'W W D L W', isForm: true),
+                  tabs: const [
+                    Tab(text: 'ROSTER'),
+                    Tab(text: 'STATS'),
+                    Tab(text: 'MATCHES'),
                   ],
                 ),
+
+                // Tab Content
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildRosterTab(),
+                      _buildStatsTab(),
+                      _buildMatchesTab(),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-
-          // Tabs
-          TabBar(
-            controller: _tabController,
-            dividerColor: Colors.transparent,
-            indicatorSize: TabBarIndicatorSize.label,
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 13,
-              letterSpacing: 0.5,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-            tabs: const [
-              Tab(text: 'ROSTER'),
-              Tab(text: 'STATS'),
-              Tab(text: 'MATCHES'),
-            ],
-          ),
-
-          // Tab Content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildRosterTab(),
-                _buildStatsTab(),
-                _buildMatchesTab(),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -208,52 +247,86 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   }
 
   Widget _buildRosterTab() {
-    final players = [
-      'John Doe (C)',
-      'Mike Smith',
-      'Alice Johnson',
-      'Bob Wilson',
-      'Chris Brown',
-      'David Davis',
-      'Eva Evans',
-      'Frank Franklin',
-      'Grace George',
-      'Henry Hill',
-      'Ivy Irving',
-    ];
+    final roster = _detailedTeam.roster;
+    if (roster == null || roster.isEmpty) {
+      return const Center(child: Text('No roster information available'));
+    }
 
-    return ListView.builder(
+    return ListView(
       padding: const EdgeInsets.all(20),
-      itemCount: players.length,
-      itemBuilder: (context, index) {
-        final player = players[index];
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 4),
-          leading: CircleAvatar(
-            backgroundColor: Colors.white.withValues(alpha: 0.05),
-            child: Text(
-              player[0],
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-          ),
-          title: Text(
-            player,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          ),
-          subtitle: Text(
-            'Midfielder',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-          ),
-          trailing: const Text(
-            '7.5',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              color: Colors.greenAccent,
-            ),
-          ),
-        );
-      },
+      children: [
+        if (roster['goalkeepers']?.isNotEmpty ?? false)
+          ..._buildPositionSection('GOALKEEPERS', roster['goalkeepers']!),
+        if (roster['defenders']?.isNotEmpty ?? false)
+          ..._buildPositionSection('DEFENDERS', roster['defenders']!),
+        if (roster['midfielders']?.isNotEmpty ?? false)
+          ..._buildPositionSection('MIDFIELDERS', roster['midfielders']!),
+        if (roster['forwards']?.isNotEmpty ?? false)
+          ..._buildPositionSection('FORWARDS', roster['forwards']!),
+      ],
     );
+  }
+
+  List<Widget> _buildPositionSection(String title, List<Player> players) {
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: Colors.grey[500],
+            letterSpacing: 1.5,
+          ),
+        ),
+      ),
+      ...players.map((p) => _buildPlayerTile(p)),
+    ];
+  }
+
+  Widget _buildPlayerTile(Player player) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+      leading: CircleAvatar(
+        backgroundColor: Colors.white.withValues(alpha: 0.05),
+        child: Text(
+          player.jerseyNumber.toString(),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        ),
+      ),
+      title: Text(
+        player.name,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
+      subtitle: Text(
+        player.position.toUpperCase(),
+        style: TextStyle(color: Colors.grey[600], fontSize: 11),
+      ),
+      trailing: Text(
+        player.goals > 0 ? '${player.goals} G' : '',
+        style: const TextStyle(
+          fontWeight: FontWeight.w900,
+          color: Colors.greenAccent,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  String _getRank() {
+    if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
+      return '-';
+    }
+    // Just showing the first one for now
+    return '4th'; // We need sorting logic for rank, keeping dummy for now
+  }
+
+  String _getPoints() {
+    if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
+      return '-';
+    }
+    return _detailedTeam.standings!.first.points.toString();
   }
 
   Widget _buildStatsTab() {
