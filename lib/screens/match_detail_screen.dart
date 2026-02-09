@@ -26,63 +26,86 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     super.dispose();
   }
 
+  //
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final bool isLive = widget.match['status'] == 'LIVE';
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text(widget.match['tournament'] ?? 'Match Detail'),
-        actions: [IconButton(icon: const Icon(Icons.share), onPressed: () {})],
+        title: Text(
+          (widget.match['tournament'] as String).toUpperCase(),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+        actions: [
+          IconButton(icon: const Icon(Icons.share_outlined), onPressed: () {}),
+        ],
       ),
       body: Column(
         children: [
-          // Scoreboard Header
+          // Premium Scoreboard Billboard
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
             decoration: BoxDecoration(
-              color: colorScheme.primary,
+              color: colorScheme.surfaceContainer,
               borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
               ),
             ),
             child: Column(
               children: [
                 if (isLive)
                   Container(
-                    margin: const EdgeInsets.only(bottom: 16),
+                    margin: const EdgeInsets.only(bottom: 20),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 4,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.red,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
-                      'LIVE',
+                      'LIVE • 67\'',
                       style: TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildTeamInfo(widget.match['homeTeam'], isHome: true),
+                    Expanded(
+                      child: _buildTeamInfo(
+                        widget.match['homeTeam'],
+                        isHome: true,
+                      ),
+                    ),
                     _buildScore(widget.match),
-                    _buildTeamInfo(widget.match['awayTeam'], isHome: false),
+                    Expanded(
+                      child: _buildTeamInfo(
+                        widget.match['awayTeam'],
+                        isHome: false,
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Text(
-                  widget.match['time'] ?? 'Upcoming',
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  widget.match['venue'] ?? 'Main Stadium, ASTU',
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -90,20 +113,27 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
             ),
           ),
 
-          // Tabs
-          Container(
-            color: colorScheme.surface,
-            child: TabBar(
-              controller: _tabController,
-              labelColor: colorScheme.primary,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: colorScheme.primary,
-              tabs: const [
-                Tab(text: 'Timeline'),
-                Tab(text: 'Stats'),
-                Tab(text: 'Lineups'),
-              ],
+          const SizedBox(height: 8),
+
+          // Custom Tabs
+          TabBar(
+            controller: _tabController,
+            dividerColor: Colors.transparent,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 13,
+              letterSpacing: 0.5,
             ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+            tabs: const [
+              Tab(text: 'TIMELINE'),
+              Tab(text: 'STATS'),
+              Tab(text: 'LINEUPS'),
+            ],
           ),
 
           // Tab Content
@@ -125,32 +155,33 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
   Widget _buildTeamInfo(String name, {required bool isHome}) {
     return Column(
       children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: Colors.white.withOpacity(0.2),
-          child: Text(
-            name.substring(0, 1),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+        Container(
+          width: 70,
+          height: 70,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.05),
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              name.substring(0, 1),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: 80,
-          child: Text(
-            name,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+        const SizedBox(height: 12),
+        Text(
+          name,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
         ),
       ],
     );
@@ -158,46 +189,61 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
 
   Widget _buildScore(Map<String, dynamic> match) {
     if (match['status'] == 'upcoming') {
-      return const Text(
-        'Vs',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Text(
+          'VS',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: Colors.white24,
+          ),
         ),
       );
     }
-    return Row(
+    return Column(
       children: [
-        Text(
-          '${match['homeScore']}',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 48,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            '-',
-            style: TextStyle(color: Colors.white38, fontSize: 32),
-          ),
-        ),
-        Text(
-          '${match['awayScore']}',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 48,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${match['homeScore']}',
+              style: const TextStyle(
+                fontSize: 56,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -2,
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                ':',
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white24,
+                ),
+              ),
+            ),
+            Text(
+              '${match['awayScore']}',
+              style: const TextStyle(
+                fontSize: 56,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -2,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildTimelineTab() {
-    // Mock events
     final events = [
       {'min': '12\'', 'player': 'John Doe', 'team': 'home', 'type': 'goal'},
       {
@@ -206,12 +252,12 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
         'team': 'away',
         'type': 'yellow_card',
       },
-      {'min': '45+1\'', 'player': 'Half Time', 'team': 'none', 'type': 'info'},
+      {'min': 'HT', 'player': 'HALF TIME', 'team': 'none', 'type': 'info'},
       {'min': '67\'', 'player': 'Mike Johnson', 'team': 'home', 'type': 'goal'},
     ];
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       itemCount: events.length,
       itemBuilder: (context, index) {
         final event = events[index];
@@ -220,92 +266,167 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
 
         if (isInfo) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: Text(
-                event['player'] as String,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Row(
+              children: [
+                const Expanded(child: Divider(endIndent: 16)),
+                Text(
+                  event['player'] as String,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: Colors.grey[600],
+                    fontSize: 10,
+                    letterSpacing: 2,
+                  ),
                 ),
-              ),
+                const Expanded(child: Divider(indent: 16)),
+              ],
             ),
           );
         }
 
-        return Row(
-          mainAxisAlignment: isHome
-              ? MainAxisAlignment.start
-              : MainAxisAlignment.end,
-          children: [
-            if (!isHome) const Spacer(),
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
+        return IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: isHome
+                    ? _buildEventContent(event, isHome: true)
+                    : const SizedBox(),
               ),
-              child: Row(
+              Column(
                 children: [
-                  if (isHome) ...[
-                    Text(
-                      event['min'] as String,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: isHome
+                          ? Theme.of(context).colorScheme.primary
+                          : (event['team'] == 'away'
+                                ? Colors.grey[700]
+                                : Colors.transparent),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 2,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    _buildEventIcon(event['type'] as String),
-                    const SizedBox(width: 8),
-                  ],
-                  Text(event['player'] as String),
-                  if (!isHome) ...[
-                    const SizedBox(width: 8),
-                    _buildEventIcon(event['type'] as String),
-                    const SizedBox(width: 8),
-                    Text(
-                      event['min'] as String,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                  ),
+                  Expanded(
+                    child: index == events.length - 1
+                        ? const SizedBox()
+                        : VerticalDivider(
+                            width: 2,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                  ),
                 ],
               ),
-            ),
-            if (isHome) const Spacer(),
-          ],
+              Expanded(
+                child: !isHome
+                    ? _buildEventContent(event, isHome: false)
+                    : const SizedBox(),
+              ),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildEventContent(
+    Map<String, dynamic> event, {
+    required bool isHome,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: isHome ? 0 : 16,
+        right: isHome ? 16 : 0,
+        bottom: 24,
+      ),
+      child: Column(
+        crossAxisAlignment: isHome
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: isHome
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            children: [
+              if (!isHome) _buildEventIcon(event['type'] as String),
+              if (!isHome) const SizedBox(width: 8),
+              Text(
+                event['min'] as String,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                ),
+              ),
+              if (isHome) const SizedBox(width: 8),
+              if (isHome) _buildEventIcon(event['type'] as String),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            event['player'] as String,
+            style: TextStyle(
+              color: Colors.grey[300],
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildEventIcon(String type) {
     switch (type) {
       case 'goal':
-        return const Icon(Icons.sports_soccer, size: 16, color: Colors.green);
+        return const Icon(
+          Icons.sports_soccer,
+          size: 16,
+          color: Colors.greenAccent,
+        );
       case 'yellow_card':
-        return const Icon(Icons.rectangle, size: 16, color: Colors.amber);
+        return Container(
+          width: 10,
+          height: 14,
+          decoration: BoxDecoration(
+            color: Colors.amber,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
       case 'red_card':
-        return const Icon(Icons.rectangle, size: 16, color: Colors.red);
+        return Container(
+          width: 10,
+          height: 14,
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
       default:
-        return const Icon(Icons.info, size: 16);
+        return const Icon(Icons.info_outline, size: 16);
     }
   }
 
   Widget _buildStatsTab() {
     final stats = [
-      {'label': 'Possession', 'home': '54%', 'away': '46%', 'homeVal': 0.54},
-      {'label': 'Shots', 'home': '12', 'away': '8', 'homeVal': 0.6},
-      {'label': 'Shots on Target', 'home': '5', 'away': '3', 'homeVal': 0.62},
-      {'label': 'Corners', 'home': '6', 'away': '4', 'homeVal': 0.6},
-      {'label': 'Fouls', 'home': '10', 'away': '14', 'homeVal': 0.4},
+      {'label': 'POSSESSION', 'home': '54%', 'away': '46%', 'homeVal': 0.54},
+      {'label': 'SHOTS', 'home': '12', 'away': '8', 'homeVal': 0.6},
+      {'label': 'ON TARGET', 'home': '5', 'away': '3', 'homeVal': 0.62},
+      {'label': 'CORNERS', 'home': '6', 'away': '4', 'homeVal': 0.6},
+      {'label': 'FOULS', 'home': '10', 'away': '14', 'homeVal': 0.4},
     ];
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       itemCount: stats.length,
       itemBuilder: (context, index) {
         final stat = stats[index];
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
               Row(
@@ -313,27 +434,40 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                 children: [
                   Text(
                     stat['home'] as String,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
                   ),
                   Text(
                     stat['label'] as String,
-                    style: const TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
                   ),
                   Text(
                     stat['away'] as String,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: stat['homeVal'] as double,
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Theme.of(context).colorScheme.primary,
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                  value: stat['homeVal'] as double,
+                  backgroundColor: Colors.white.withValues(alpha: 0.05),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                  minHeight: 6,
                 ),
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
               ),
             ],
           ),
@@ -344,22 +478,21 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
 
   Widget _buildLineupsTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildTeamLineup(widget.match['homeTeam'], [
-            'Player A',
-            'Player B',
-            'Player C',
-            'Player D',
+            'J. Doe (GK)',
+            'M. Smith',
+            'A. Johnson',
+            'K. Williams',
           ]),
-          const Divider(height: 40),
+          const SizedBox(height: 32),
           _buildTeamLineup(widget.match['awayTeam'], [
-            'Player X',
-            'Player Y',
-            'Player Z',
-            'Player W',
+            'L. Brown (GK)',
+            'P. Davis',
+            'R. Miller',
+            'S. Wilson',
           ]),
         ],
       ),
@@ -370,16 +503,54 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '$team Lineup',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 16,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              team.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         ...players.map(
           (p) => ListTile(
-            leading: const CircleAvatar(child: Icon(Icons.person)),
-            title: Text(p),
-            trailing: const Text('FW'),
+            contentPadding: EdgeInsets.zero,
+            leading: CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.white.withValues(alpha: 0.05),
+              child: Text(
+                p[0],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            title: Text(
+              p,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            trailing: Text(
+              p.contains('(GK)') ? 'GK' : 'FW',
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
       ],

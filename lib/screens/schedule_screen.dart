@@ -160,40 +160,52 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
-        // Tournament filter
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        // Tournament filter - Modern chip-style scroll
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           child: Row(
-            children: [
-              Icon(
-                Icons.filter_list,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButton<String>(
-                  value: _selectedTournament,
-                  isExpanded: true,
-                  underline: Container(),
-                  items: _tournaments.map((tournament) {
-                    return DropdownMenuItem(
-                      value: tournament,
-                      child: Text(tournament),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
+            children: _tournaments.map((tournament) {
+              final isSelected = _selectedTournament == tournament;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(
+                    tournament.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                      color: isSelected ? Colors.white : Colors.grey[400],
+                    ),
+                  ),
+                  selected: isSelected,
+                  onSelected: (selected) {
                     setState(() {
-                      _selectedTournament = value!;
+                      _selectedTournament = tournament;
                     });
                   },
+                  backgroundColor: colorScheme.surfaceContainer,
+                  selectedColor: colorScheme.primary,
+                  checkmarkColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: isSelected
+                          ? Colors.transparent
+                          : Colors.white.withValues(alpha: 0.05),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              );
+            }).toList(),
           ),
         ),
+
         // Matches list
         Expanded(
           child: RefreshIndicator(
@@ -201,7 +213,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             child: _filteredMatches.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: _groupedMatches.length,
                     itemBuilder: (context, index) {
                       final date = _groupedMatches.keys.elementAt(index);
@@ -211,20 +223,28 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         children: [
                           // Date header
                           Padding(
-                            padding: EdgeInsets.only(
-                              left: 4,
-                              bottom: 12,
-                              top: index == 0 ? 0 : 16,
-                            ),
-                            child: Text(
-                              _formatDate(date),
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
+                            padding: const EdgeInsets.fromLTRB(4, 24, 0, 16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 3,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(2),
                                   ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _formatDate(date).toUpperCase(),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 11,
+                                    color: Colors.grey[500],
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           // Matches for this date
@@ -239,7 +259,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   ),
                                 );
                               },
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                               child: ScheduleMatchCard(match: match),
                             ),
                           ),
@@ -258,24 +278,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.calendar_today_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.event_busy_outlined, size: 80, color: Colors.grey[800]),
           const SizedBox(height: 16),
-          Text(
-            'No matches scheduled',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Pull down to refresh',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
+          const Text(
+            'NO MATCHES FOUND',
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 13,
+              letterSpacing: 1,
+              color: Colors.grey,
+            ),
           ),
         ],
       ),
@@ -294,107 +306,120 @@ class ScheduleMatchCard extends StatelessWidget {
     final isFinished = match['status'] == 'finished';
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Tournament and time
-            Row(
-              children: [
-                Icon(Icons.emoji_events, size: 14, color: colorScheme.primary),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    match['tournament'],
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      size: 12,
                       color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
                     ),
-                  ),
-                ),
-                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  match['time'],
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Teams
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    match['homeTeam'],
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (isFinished)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      '${match['homeScore']} - ${match['awayScore']}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(width: 6),
+                    Text(
+                      (match['tournament'] as String).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.primary,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                  )
-                else
-                  Text(
-                    'vs',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                  ],
+                ),
+              ),
+              Text(
+                match['time'],
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[400],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  match['homeTeam'],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
                   ),
-                Expanded(
+                ),
+              ),
+              if (isFinished)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   child: Text(
-                    match['awayTeam'],
-                    textAlign: TextAlign.right,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+                    '${match['homeScore']} - ${match['awayScore']}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
                     ),
                   ),
+                )
+              else
+                const Text(
+                  'VS',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                    color: Colors.white12,
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Venue
-            Row(
-              children: [
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 14,
+              Expanded(
+                child: Text(
+                  match['awayTeam'],
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 12,
+                color: Colors.grey[600],
+              ),
+              const SizedBox(width: 4),
+              Text(
+                match['venue'],
+                style: TextStyle(
+                  fontSize: 10,
                   color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  match['venue'],
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

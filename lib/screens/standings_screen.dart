@@ -245,20 +245,24 @@ class _StandingsScreenState extends State<StandingsScreen>
     return Column(
       children: [
         // Tournament tabs
-        Container(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Colors.grey[600],
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            indicatorWeight: 3,
-            tabs: _tournaments.map((tournament) {
-              return Tab(text: tournament);
-            }).toList(),
+        TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          dividerColor: Colors.transparent,
+          indicatorSize: TabBarIndicatorSize.label,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 13,
+            letterSpacing: 0.5,
           ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+          tabs: _tournaments.map((tournament) {
+            return Tab(text: tournament.toUpperCase());
+          }).toList(),
         ),
         // Standings table
         Expanded(
@@ -286,18 +290,21 @@ class StandingsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (standings.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey[400]),
+            Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey[800]),
             const SizedBox(height: 16),
             Text(
               'No standings available',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(color: Colors.grey[600]),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -305,47 +312,60 @@ class StandingsTable extends StatelessWidget {
     }
 
     return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
           // Table header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: Theme.of(context).colorScheme.primaryContainer,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainer,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
             child: Row(
               children: [
                 SizedBox(
-                  width: 40,
+                  width: 32,
                   child: Text(
                     '#',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      color: Colors.grey[500],
+                      letterSpacing: 1,
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 3,
                   child: Text(
-                    'Team',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    'TEAM',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      color: Colors.grey[500],
+                      letterSpacing: 1,
                     ),
                   ),
                 ),
-                _buildHeaderCell(context, 'P'),
-                _buildHeaderCell(context, 'W'),
-                _buildHeaderCell(context, 'D'),
-                _buildHeaderCell(context, 'L'),
-                _buildHeaderCell(context, 'GD'),
+                _buildHeaderCell('P'),
+                _buildHeaderCell('W'),
+                _buildHeaderCell('D'),
+                _buildHeaderCell('L'),
+                _buildHeaderCell('GD'),
                 SizedBox(
-                  width: 40,
+                  width: 32,
                   child: Text(
-                    'Pts',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    'PTS',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      color: colorScheme.primary,
+                      letterSpacing: 1,
                     ),
                   ),
                 ),
@@ -361,49 +381,44 @@ class StandingsTable extends StatelessWidget {
               final team = standings[index];
               final goalDifference = team['goalsFor'] - team['goalsAgainst'];
               final isTopThree = team['rank'] <= 3;
+              final bool isLast = index == standings.length - 1;
 
               return Container(
                 decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey[200]!, width: 1),
+                  color: colorScheme.surfaceContainer.withValues(
+                    alpha: index % 2 == 0 ? 0.3 : 0.6,
                   ),
-                  color: isTopThree
-                      ? Theme.of(context).colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.1)
+                  borderRadius: isLast
+                      ? const BorderRadius.only(
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        )
                       : null,
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 12,
+                  vertical: 14,
                 ),
                 child: Row(
                   children: [
-                    // Rank with medal for top 3
+                    // Rank
                     SizedBox(
-                      width: 40,
-                      child: Row(
-                        children: [
-                          if (isTopThree)
-                            Icon(
-                              Icons.emoji_events,
-                              size: 16,
-                              color: team['rank'] == 1
-                                  ? Colors.amber
-                                  : team['rank'] == 2
-                                  ? Colors.grey[400]
-                                  : Colors.brown[300],
-                            ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${team['rank']}',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  fontWeight: isTopThree
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                          ),
-                        ],
+                      width: 32,
+                      child: Text(
+                        '${team['rank']}',
+                        style: TextStyle(
+                          fontWeight: isTopThree
+                              ? FontWeight.w900
+                              : FontWeight.bold,
+                          color: team['rank'] == 1
+                              ? Colors.amber
+                              : team['rank'] == 2
+                              ? Colors.grey[400]
+                              : team['rank'] == 3
+                              ? Colors.brown[300]
+                              : Colors.grey[500],
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     // Team name
@@ -411,40 +426,43 @@ class StandingsTable extends StatelessWidget {
                       flex: 3,
                       child: Text(
                         team['team'],
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        style: TextStyle(
                           fontWeight: isTopThree
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                              ? FontWeight.w900
+                              : FontWeight.bold,
+                          fontSize: 13,
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     // Stats
-                    _buildStatCell(context, '${team['played']}'),
-                    _buildStatCell(context, '${team['won']}'),
-                    _buildStatCell(context, '${team['drawn']}'),
-                    _buildStatCell(context, '${team['lost']}'),
+                    _buildStatCell('${team['played']}'),
+                    _buildStatCell('${team['won']}'),
+                    _buildStatCell('${team['drawn']}'),
+                    _buildStatCell('${team['lost']}'),
                     _buildStatCell(
-                      context,
                       goalDifference >= 0
                           ? '+$goalDifference'
                           : '$goalDifference',
                       color: goalDifference > 0
-                          ? Colors.green
+                          ? Colors.greenAccent
                           : goalDifference < 0
-                          ? Colors.red
-                          : null,
+                          ? Colors.redAccent
+                          : Colors.grey[600],
                     ),
                     // Points
                     SizedBox(
-                      width: 40,
+                      width: 32,
                       child: Text(
                         '${team['points']}',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          color: isTopThree
+                              ? colorScheme.primary
+                              : Colors.white,
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -455,27 +473,43 @@ class StandingsTable extends StatelessWidget {
           ),
           // Legend
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Legend',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'LEGEND',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                        letterSpacing: 1.5,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 16,
-                  runSpacing: 4,
+                  runSpacing: 8,
                   children: [
-                    _buildLegendItem(context, 'P', 'Played'),
-                    _buildLegendItem(context, 'W', 'Won'),
-                    _buildLegendItem(context, 'D', 'Drawn'),
-                    _buildLegendItem(context, 'L', 'Lost'),
-                    _buildLegendItem(context, 'GD', 'Goal Difference'),
-                    _buildLegendItem(context, 'Pts', 'Points'),
+                    _buildLegendItem('P', 'Played'),
+                    _buildLegendItem('W', 'Won'),
+                    _buildLegendItem('D', 'Drawn'),
+                    _buildLegendItem('L', 'Lost'),
+                    _buildLegendItem('GD', 'Goal Difference'),
+                    _buildLegendItem('PTS', 'Points'),
                   ],
                 ),
               ],
@@ -486,49 +520,56 @@ class StandingsTable extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderCell(BuildContext context, String text) {
+  Widget _buildHeaderCell(String text) {
     return SizedBox(
-      width: 35,
+      width: 30,
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        style: TextStyle(
+          fontWeight: FontWeight.w900,
+          fontSize: 10,
+          color: Colors.grey[500],
+          letterSpacing: 1,
         ),
       ),
     );
   }
 
-  Widget _buildStatCell(BuildContext context, String text, {Color? color}) {
+  Widget _buildStatCell(String text, {Color? color}) {
     return SizedBox(
-      width: 35,
+      width: 30,
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: color ?? Colors.grey[700]),
+        style: TextStyle(
+          color: color ?? Colors.white70,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  Widget _buildLegendItem(BuildContext context, String abbr, String full) {
+  Widget _buildLegendItem(String abbr, String full) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          '$abbr:',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+          '$abbr ',
+          style: const TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 10,
+            color: Colors.white70,
+          ),
         ),
-        const SizedBox(width: 4),
         Text(
           full,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );

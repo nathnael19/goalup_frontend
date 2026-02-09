@@ -124,7 +124,6 @@ class _LiveScoresScreenState extends State<LiveScoresScreen> {
   }
 }
 
-/// Match Card Widget displaying match information
 class MatchCard extends StatelessWidget {
   final Map<String, dynamic> match;
 
@@ -135,133 +134,168 @@ class MatchCard extends StatelessWidget {
     final isLive = match['status'] == 'LIVE';
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isLive
+              ? Colors.red.withValues(alpha: 0.3)
+              : Colors.transparent,
+          width: 2,
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tournament name
+            // Tournament & Status
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.emoji_events, size: 16, color: colorScheme.primary),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    match['tournament'],
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                Row(
+                  children: [
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      size: 14,
                       color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
                     ),
-                  ),
+                    const SizedBox(width: 6),
+                    Text(
+                      match['tournament'].toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.primary,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
                 ),
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isLive ? Colors.red : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
+                if (isLive)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else
+                  Text(
                     match['status'],
                     style: TextStyle(
-                      color: isLive ? Colors.white : Colors.black87,
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
+                      color: Colors.grey[500],
                     ),
                   ),
-                ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Match details
+            const SizedBox(height: 24),
+            // Teams & Score
             Row(
               children: [
-                // Home team
+                // Home Team
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildTeamLogo(match['homeTeam']),
+                      const SizedBox(height: 12),
                       Text(
                         match['homeTeam'],
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                // Score
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${match['homeScore']} - ${match['awayScore']}',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-                // Away team
-                Expanded(
+                // Score Area
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        match['awayTeam'],
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        '${match['homeScore']} - ${match['awayScore']}',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
                         ),
-                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        match['time'],
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isLive ? Colors.red : Colors.grey[400],
+                          fontWeight: isLive
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Away Team
+                Expanded(
+                  child: Column(
+                    children: [
+                      _buildTeamLogo(match['awayTeam']),
+                      const SizedBox(height: 12),
+                      Text(
+                        match['awayTeam'],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            // Match time
-            Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isLive)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.only(right: 6),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  Text(
-                    match['time'],
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: isLive ? Colors.red : Colors.grey[600],
-                      fontWeight: isLive ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamLogo(String name) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          name.substring(0, 1),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white70,
+          ),
         ),
       ),
     );
