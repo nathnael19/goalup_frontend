@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'live_scores_screen.dart';
 import 'schedule_screen.dart';
 import 'standings_screen.dart';
+import 'teams_screen.dart';
 
 /// Home screen with bottom navigation for the GoalUp app
 ///
@@ -25,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const LiveScoresScreen(),
     const ScheduleScreen(),
     const StandingsScreen(),
-    const TeamsTab(),
+    const TeamsScreen(),
   ];
 
   @override
@@ -99,46 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Placeholder tab widgets
-class TeamsTab extends StatelessWidget {
-  const TeamsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.groups_3_outlined,
-            size: 100,
-            color: Colors.white.withValues(alpha: 0.05),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'TEAMS COMING SOON',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-              letterSpacing: 2,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Individual team stats & rosters',
-            style: TextStyle(
-              color: Colors.grey[700],
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,0 +1,321 @@
+import 'package:flutter/material.dart';
+
+/// Detailed view for a specific team
+class TeamDetailScreen extends StatefulWidget {
+  final Map<String, dynamic> team;
+
+  const TeamDetailScreen({super.key, required this.team});
+
+  @override
+  State<TeamDetailScreen> createState() => _TeamDetailScreenState();
+}
+
+class _TeamDetailScreenState extends State<TeamDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final team = widget.team;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          (team['name'] as String).toUpperCase(),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Premium Team Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainer,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
+              ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: (team['color'] as Color).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: (team['color'] as Color).withValues(alpha: 0.2),
+                      width: 4,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      team['name'][0],
+                      style: TextStyle(
+                        color: team['color'],
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  team['name'],
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  (team['tournament'] as String).toUpperCase(),
+                  style: TextStyle(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildQuickStat('RANK', '4th'),
+                    _buildDivider(),
+                    _buildQuickStat('POINTS', '19'),
+                    _buildDivider(),
+                    _buildQuickStat('FORM', 'W W D L W', isForm: true),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Tabs
+          TabBar(
+            controller: _tabController,
+            dividerColor: Colors.transparent,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 13,
+              letterSpacing: 0.5,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+            tabs: const [
+              Tab(text: 'ROSTER'),
+              Tab(text: 'STATS'),
+              Tab(text: 'MATCHES'),
+            ],
+          ),
+
+          // Tab Content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildRosterTab(),
+                _buildStatsTab(),
+                _buildMatchesTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStat(String label, String value, {bool isForm = false}) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 6),
+        if (isForm)
+          Row(children: value.split(' ').map((v) => _buildFormDot(v)).toList())
+        else
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFormDot(String result) {
+    Color color = Colors.grey;
+    if (result == 'W') color = Colors.greenAccent;
+    if (result == 'L') color = Colors.redAccent;
+    if (result == 'D') color = Colors.amberAccent;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: Center(
+        child: Text(
+          result,
+          style: const TextStyle(
+            fontSize: 7,
+            fontWeight: FontWeight.w900,
+            color: Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      height: 24,
+      width: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      color: Colors.white.withValues(alpha: 0.05),
+    );
+  }
+
+  Widget _buildRosterTab() {
+    final players = [
+      'John Doe (C)',
+      'Mike Smith',
+      'Alice Johnson',
+      'Bob Wilson',
+      'Chris Brown',
+      'David Davis',
+      'Eva Evans',
+      'Frank Franklin',
+      'Grace George',
+      'Henry Hill',
+      'Ivy Irving',
+    ];
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: players.length,
+      itemBuilder: (context, index) {
+        final player = players[index];
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 4),
+          leading: CircleAvatar(
+            backgroundColor: Colors.white.withValues(alpha: 0.05),
+            child: Text(
+              player[0],
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+          title: Text(
+            player,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          subtitle: Text(
+            'Midfielder',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+          trailing: const Text(
+            '7.5',
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              color: Colors.greenAccent,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatsTab() {
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        _buildStatRow('GOALS SCORED', '18', 0.8),
+        _buildStatRow('GOALS CONCEDED', '7', 0.3),
+        _buildStatRow('CLEAN SHEETS', '3', 0.4),
+        _buildStatRow('AVG POSSESSION', '54%', 0.6),
+        _buildStatRow('SHOTS PER GAME', '12.4', 0.7),
+      ],
+    );
+  }
+
+  Widget _buildStatRow(String label, String value, double progress) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.white.withValues(alpha: 0.05),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMatchesTab() {
+    return Center(
+      child: Text(
+        'Match history and fixtures',
+        style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
