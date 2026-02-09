@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'match_detail_screen.dart';
 
 /// Match Schedule Screen displaying upcoming and past matches
 ///
@@ -164,7 +165,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         // Tournament filter
         Container(
           padding: const EdgeInsets.all(16),
-          color: Theme.of(context).colorScheme.surfaceVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           child: Row(
             children: [
               Icon(
@@ -228,7 +229,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           ),
                           // Matches for this date
                           ...matches.map(
-                            (match) => ScheduleMatchCard(match: match),
+                            (match) => InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MatchDetailScreen(match: match),
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: ScheduleMatchCard(match: match),
+                            ),
                           ),
                         ],
                       );
@@ -333,7 +346,7 @@ class ScheduleMatchCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceVariant,
+                      color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'match_detail_screen.dart';
 
 /// Live Scores Screen displaying ongoing and recent matches
 ///
@@ -79,7 +80,19 @@ class _LiveScoresScreenState extends State<LiveScoresScreen> {
               padding: const EdgeInsets.all(16),
               itemCount: _matches.length,
               itemBuilder: (context, index) {
-                return MatchCard(match: _matches[index]);
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            MatchDetailScreen(match: _matches[index]),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: MatchCard(match: _matches[index]),
+                );
               },
             ),
     );
