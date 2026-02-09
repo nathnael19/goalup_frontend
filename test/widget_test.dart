@@ -11,20 +11,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:goalup/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('GoalUp app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const GoalUpApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that the app title is displayed
+    expect(find.text('GoalUp'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the bottom navigation has all tabs
+    expect(find.text('Live Scores'), findsOneWidget);
+    expect(find.text('Schedule'), findsOneWidget);
+    expect(find.text('Standings'), findsOneWidget);
+    expect(find.text('Teams'), findsOneWidget);
   });
 }
