@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'live_scores_screen.dart';
+import 'schedule_screen.dart';
 
 /// Home screen with bottom navigation for the GoalUp app
 ///
@@ -21,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Screens for each tab
   final List<Widget> _screens = [
     const LiveScoresScreen(),
-    const ScheduleTab(),
+    const ScheduleScreen(),
     const StandingsTab(),
     const TeamsTab(),
   ];
@@ -75,40 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // Placeholder tab widgets
-class ScheduleTab extends StatelessWidget {
-  const ScheduleTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.calendar_today,
-            size: 80,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Match Schedule',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Upcoming and past matches',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class StandingsTab extends StatelessWidget {
   const StandingsTab({super.key});
 
