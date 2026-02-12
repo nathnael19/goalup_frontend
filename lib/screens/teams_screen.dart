@@ -154,7 +154,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'TEAM', // We don't have tournament name in Team model yet
+              (team.tournament?.name ?? 'TOURNAMENT').toUpperCase(),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey[600],
@@ -164,6 +164,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            /*
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -171,7 +172,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
-                '14 PLAYERS', // Mock for now
+                '14 PLAYERS', // Roster not available in list view yet
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
@@ -179,6 +180,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
                 ),
               ),
             ),
+            */
           ],
         ),
       ),

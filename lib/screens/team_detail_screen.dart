@@ -125,7 +125,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _detailedTeam.batch.toUpperCase(),
+                        (_detailedTeam.batch ?? 'N/A').toUpperCase(),
                         style: TextStyle(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w900,

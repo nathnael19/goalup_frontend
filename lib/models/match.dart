@@ -1,5 +1,6 @@
 import 'team.dart';
 import 'tournament.dart';
+import 'event.dart';
 
 enum MatchStatus { scheduled, live, finished }
 
@@ -18,6 +19,10 @@ class Match {
   final Tournament? tournament;
   final Team? teamA;
   final Team? teamB;
+  final List<Goal>? goals;
+  final List<Card>? cards;
+  final List<Substitution>? substitutions;
+  final List<Lineup>? lineups;
 
   Match({
     required this.id,
@@ -32,6 +37,10 @@ class Match {
     this.tournament,
     this.teamA,
     this.teamB,
+    this.goals,
+    this.cards,
+    this.substitutions,
+    this.lineups,
   });
 
   factory Match.fromJson(Map<String, dynamic> json) {
@@ -53,6 +62,20 @@ class Match {
           : null,
       teamA: json['team_a'] != null ? Team.fromJson(json['team_a']) : null,
       teamB: json['team_b'] != null ? Team.fromJson(json['team_b']) : null,
+      goals: json['goals'] != null
+          ? (json['goals'] as List).map((e) => Goal.fromJson(e)).toList()
+          : null,
+      cards: json['cards'] != null
+          ? (json['cards'] as List).map((e) => Card.fromJson(e)).toList()
+          : null,
+      substitutions: json['substitutions'] != null
+          ? (json['substitutions'] as List)
+                .map((e) => Substitution.fromJson(e))
+                .toList()
+          : null,
+      lineups: json['lineups'] != null
+          ? (json['lineups'] as List).map((e) => Lineup.fromJson(e)).toList()
+          : null,
     );
   }
 
