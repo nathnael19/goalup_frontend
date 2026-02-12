@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
+import 'news_feed_screen.dart';
 import 'live_scores_screen.dart';
 import 'schedule_screen.dart';
 import 'standings_screen.dart';
-import 'teams_screen.dart';
 
-/// Home screen with bottom navigation for the GoalUp app
-///
-/// Provides navigation between:
-/// - Live Scores
-/// - Match Schedule
-/// - Standings
-/// - Teams
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -21,12 +14,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  // Screens for each tab
   final List<Widget> _screens = [
+    const NewsFeedScreen(),
     const LiveScoresScreen(),
     const ScheduleScreen(),
     const StandingsScreen(),
-    const TeamsScreen(),
   ];
 
   @override
@@ -36,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.sports_soccer, color: colorScheme.primary, size: 28),
             const SizedBox(width: 8),
@@ -50,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded),
@@ -58,20 +48,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _screens[_currentIndex],
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
+          color: colorScheme.surface,
           border: Border(
-            top: BorderSide(
-              color: Colors.white.withValues(alpha: 0.05),
-              width: 1,
-            ),
+            top: BorderSide(color: Colors.white.withOpacity(0.05), width: 1),
           ),
         ),
         child: NavigationBar(
           selectedIndex: _currentIndex,
-          height: 65,
-          elevation: 0,
+          height: 70,
+          backgroundColor: Colors.transparent,
           onDestinationSelected: (index) {
             setState(() {
               _currentIndex = index;
@@ -79,24 +67,24 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.flash_on_outlined),
-              selectedIcon: Icon(Icons.flash_on),
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home_rounded),
+              label: 'News',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.sports_soccer_outlined),
+              selectedIcon: Icon(Icons.sports_soccer_rounded),
               label: 'Live',
             ),
             NavigationDestination(
               icon: Icon(Icons.calendar_month_outlined),
-              selectedIcon: Icon(Icons.calendar_month),
+              selectedIcon: Icon(Icons.calendar_month_rounded),
               label: 'Schedule',
             ),
             NavigationDestination(
               icon: Icon(Icons.leaderboard_outlined),
-              selectedIcon: Icon(Icons.leaderboard),
+              selectedIcon: Icon(Icons.leaderboard_rounded),
               label: 'Standings',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.groups_outlined),
-              selectedIcon: Icon(Icons.groups),
-              label: 'Teams',
             ),
           ],
         ),

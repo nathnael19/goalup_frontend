@@ -42,44 +42,56 @@ class GoalUpApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2196F3),
-          brightness: Brightness.dark,
-          surface: const Color(0xFF121212),
-          surfaceContainer: const Color(0xFF1E1E1E),
+        brightness: Brightness.dark,
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFE53935), // Red
+          onPrimary: Colors.white,
+          surface: Color(0xFF0A0A0A), // Deeper Black
+          onSurface: Colors.white,
+          surfaceContainer: Color(0xFF1A1A1A),
         ),
-        scaffoldBackgroundColor: const Color(0xFF121212),
+        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
         appBarTheme: const AppBarTheme(
-          centerTitle: true,
+          centerTitle:
+              false, // Changed to match design of many news apps, but home_screen has its own title
           elevation: 0,
-          backgroundColor: Color(0xFF121212),
+          backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           titleTextStyle: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
             letterSpacing: 0.5,
+            color: Colors.white,
           ),
         ),
         cardTheme: CardThemeData(
           elevation: 0,
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
           ),
-          color: const Color(0xFF1E1E1E),
+          color: const Color(0xFF1A1A1A),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: const Color(0xFF121212),
-          indicatorColor: const Color(0xFF2196F3).withValues(alpha: 0.2),
+          backgroundColor: const Color(0xFF0A0A0A),
+          elevation: 0,
+          indicatorColor:
+              Colors.transparent, // We'll manage selection via colors
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return const TextStyle(
-                color: Color(0xFF2196F3),
+                color: Color(0xFFE53935),
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 11,
               );
             }
-            return const TextStyle(color: Colors.grey, fontSize: 12);
+            return const TextStyle(color: Colors.grey, fontSize: 11);
+          }),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const IconThemeData(color: Color(0xFFE53935), size: 26);
+            }
+            return const IconThemeData(color: Colors.grey, size: 24);
           }),
         ),
       ),
