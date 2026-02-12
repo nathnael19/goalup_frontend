@@ -6,6 +6,7 @@ class News {
   final String description;
   final String imageUrl;
   final String? content;
+  final String reporterName;
 
   News({
     required this.id,
@@ -14,6 +15,7 @@ class News {
     required this.date,
     required this.description,
     required this.imageUrl,
+    required this.reporterName,
     this.content,
   });
 }

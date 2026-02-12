@@ -30,6 +30,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
           'A last-minute strike sent the stadium wild as Arsenal snatched victory in the dying seconds...',
       imageUrl:
           'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000&auto=format&fit=crop',
+      reporterName: 'John Doe',
     ),
     News(
       id: '2',
@@ -40,6 +41,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
           'The club confirmed today that the captain has extended his stay with an improved deal...',
       imageUrl:
           'https://images.unsplash.com/photo-1518152006812-edab29b069ac?q=80&w=2000&auto=format&fit=crop',
+      reporterName: 'Jane Smith',
     ),
   ];
 
@@ -67,7 +69,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 return NewsCard(news: filteredNews[index]);

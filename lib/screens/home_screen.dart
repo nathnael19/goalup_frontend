@@ -15,9 +15,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const NewsFeedScreen(),
     const LiveScoresScreen(),
     const ScheduleScreen(),
+    const NewsFeedScreen(),
     const StandingsScreen(),
   ];
 
@@ -67,11 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded),
-              label: 'News',
-            ),
-            NavigationDestination(
               icon: Icon(Icons.sports_soccer_outlined),
               selectedIcon: Icon(Icons.sports_soccer_rounded),
               label: 'Live',
@@ -79,7 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
             NavigationDestination(
               icon: Icon(Icons.calendar_month_outlined),
               selectedIcon: Icon(Icons.calendar_month_rounded),
-              label: 'Schedule',
+              label: 'Matches',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.newspaper_outlined),
+              selectedIcon: Icon(Icons.newspaper),
+              label: 'News',
             ),
             NavigationDestination(
               icon: Icon(Icons.leaderboard_outlined),
