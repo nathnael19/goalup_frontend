@@ -13,6 +13,7 @@ class Team {
   final List<Match>? matches;
   final List<Standing>? standings;
   final Tournament? tournament;
+  final String? stadium;
 
   Team({
     required this.id,
@@ -24,6 +25,7 @@ class Team {
     this.matches,
     this.standings,
     this.tournament,
+    this.stadium,
   });
 
   factory Team.fromJson(Map<String, dynamic> json) {
@@ -53,10 +55,17 @@ class Team {
       tournament: json['tournament'] != null
           ? Tournament.fromJson(json['tournament'])
           : null,
+      stadium: json['stadium'],
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'batch': batch, 'logo_url': logoUrl};
+    return {
+      'id': id,
+      'name': name,
+      'batch': batch,
+      'logo_url': logoUrl,
+      'stadium': stadium,
+    };
   }
 }

@@ -88,7 +88,10 @@ class MatchCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      _buildTeamLogo(match.teamA?.name ?? 'T1'),
+                      _buildTeamLogo(
+                        match.teamA?.name ?? 'T1',
+                        match.teamA?.logoUrl,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         match.teamA?.name ?? 'T1',
@@ -134,7 +137,10 @@ class MatchCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      _buildTeamLogo(match.teamB?.name ?? 'T2'),
+                      _buildTeamLogo(
+                        match.teamB?.name ?? 'T2',
+                        match.teamB?.logoUrl,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         match.teamB?.name ?? 'T2',
@@ -157,7 +163,7 @@ class MatchCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamLogo(String name) {
+  Widget _buildTeamLogo(String name, String? logoUrl) {
     return Container(
       width: 48,
       height: 48,
@@ -165,15 +171,37 @@ class MatchCard extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.05),
         shape: BoxShape.circle,
       ),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name.substring(0, 1) : '?',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.white70,
-          ),
-        ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: logoUrl != null && logoUrl.isNotEmpty
+            ? Image.network(
+                logoUrl.startsWith('http')
+                    ? logoUrl
+                    : 'http://10.0.2.2:8000$logoUrl',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Text(
+                      name.isNotEmpty ? name.substring(0, 1) : '?',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  );
+                },
+              )
+            : Center(
+                child: Text(
+                  name.isNotEmpty ? name.substring(0, 1) : '?',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: Colors.white70,
+                  ),
+                ),
+              ),
       ),
     );
   }

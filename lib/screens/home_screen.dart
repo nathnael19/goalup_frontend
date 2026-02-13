@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'news_feed_screen.dart';
-import 'live_scores_screen.dart';
+
 import 'schedule_screen.dart';
 import 'standings_screen.dart';
 
@@ -15,7 +15,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const LiveScoresScreen(),
     const ScheduleScreen(),
     const NewsFeedScreen(),
     const StandingsScreen(),
@@ -66,11 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           },
           destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.sports_soccer_outlined),
-              selectedIcon: Icon(Icons.sports_soccer_rounded),
-              label: 'Live',
-            ),
             NavigationDestination(
               icon: Icon(Icons.calendar_month_outlined),
               selectedIcon: Icon(Icons.calendar_month_rounded),

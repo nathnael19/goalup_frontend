@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/match.dart' as model;
+import '../models/team.dart';
+import 'team_detail_screen.dart';
+import '../widgets/football_field.dart';
 
 /// Detailed Match Screen showing timeline, stats, and lineups
 class MatchDetailScreen extends StatefulWidget {
@@ -66,17 +69,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTeamInfo(
-                        match.teamA?.name ?? 'T1',
-                        isHome: true,
-                      ),
+                      child: _buildTeamInfo(match.teamA, 'T1', isHome: true),
                     ),
                     _buildScoreInfo(match),
                     Expanded(
-                      child: _buildTeamInfo(
-                        match.teamB?.name ?? 'T2',
-                        isHome: false,
-                      ),
+                      child: _buildTeamInfo(match.teamB, 'T2', isHome: false),
                     ),
                   ],
                 ),
@@ -132,35 +129,80 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     );
   }
 
-  Widget _buildTeamInfo(String teamName, {required bool isHome}) {
-    return Column(
-      children: [
-        Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withOpacity(0.05), width: 2),
-          ),
-          child: Center(
-            child: Text(
-              teamName.substring(0, 1),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.w900,
+  Widget _buildTeamInfo(
+    Team? team,
+    String fallbackName, {
+    required bool isHome,
+  }) {
+    final teamName = team?.name ?? fallbackName;
+
+    return GestureDetector(
+      onTap: () {
+        if (team != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TeamDetailScreen(team: team),
+            ),
+          );
+        }
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.05),
+                width: 2,
               ),
             ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(35),
+              child: team?.logoUrl != null && team!.logoUrl!.isNotEmpty
+                  ? Image.network(
+                      team.logoUrl!.startsWith('http')
+                          ? team.logoUrl!
+                          : 'http://10.0.2.2:8000${team.logoUrl}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Text(
+                            teamName.isNotEmpty
+                                ? teamName.substring(0, 1)
+                                : '?',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Text(
+                        teamName.isNotEmpty ? teamName.substring(0, 1) : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          teamName,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
-        ),
-      ],
+          const SizedBox(height: 12),
+          Text(
+            teamName,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+          ),
+        ],
+      ),
     );
   }
 
@@ -408,16 +450,17 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     final homeLineup =
         match.lineups
             ?.where((l) => l.teamId == match.teamAId && l.isStarting)
-            .map((l) => l.player?.name ?? 'Unknown') // Ideally include position
             .toList() ??
         [];
 
     final awayLineup =
         match.lineups
             ?.where((l) => l.teamId == match.teamBId && l.isStarting)
-            .map((l) => l.player?.name ?? 'Unknown')
             .toList() ??
         [];
+
+    final homeFormation = match.formationA ?? '4-3-3';
+    final awayFormation = match.formationB ?? '4-3-3';
 
     if (homeLineup.isEmpty && awayLineup.isEmpty) {
       return Center(
@@ -429,64 +472,92 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildTeamLineup(widget.match.teamA?.name ?? 'Home', homeLineup),
+          _buildTeamLineupHeader(
+            match.teamA?.name ?? 'Home',
+            homeFormation,
+            Theme.of(context).primaryColor,
+          ),
+          SizedBox(
+            height: 450,
+            child: FootballFieldWidget(
+              lineup: homeLineup,
+              formation: homeFormation,
+              isHome: true,
+              teamColor: Theme.of(context).primaryColor,
+            ),
+          ),
           const SizedBox(height: 32),
-          _buildTeamLineup(widget.match.teamB?.name ?? 'Away', awayLineup),
+          _buildTeamLineupHeader(
+            match.teamB?.name ?? 'Away',
+            awayFormation,
+            Colors.red,
+          ),
+          SizedBox(
+            height: 450,
+            child: FootballFieldWidget(
+              lineup: awayLineup,
+              formation: awayFormation,
+              isHome: false,
+              teamColor: Colors.red,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTeamLineup(String team, List<String> players) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 16,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(2),
+  Widget _buildTeamLineupHeader(
+    String teamName,
+    String formation,
+    Color color,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
+              const SizedBox(width: 8),
+              Text(
+                teamName.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
-            const SizedBox(width: 8),
-            Text(
-              team.toUpperCase(),
+            child: Text(
+              formation,
               style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
                 letterSpacing: 1,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        ...players.map(
-          (p) => ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
-              child: Text(
-                p.isNotEmpty ? p[0] : '?',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            title: Text(
-              p,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/team.dart' as model;
 import '../models/player.dart';
 import '../services/api_service.dart';
+import '../widgets/match_card.dart';
 
 /// Detailed view for a specific team
 class TeamDetailScreen extends StatefulWidget {
@@ -103,16 +104,42 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                           ),
                         ),
                         child: Center(
-                          child: Text(
-                            _detailedTeam.name.isNotEmpty
-                                ? _detailedTeam.name[0]
-                                : 'T',
-                            style: TextStyle(
-                              color: colorScheme.primary,
-                              fontSize: 48,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
+                          child:
+                              _detailedTeam.logoUrl != null &&
+                                  _detailedTeam.logoUrl!.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(50),
+                                  child: Image.network(
+                                    _detailedTeam.logoUrl!.startsWith('http')
+                                        ? _detailedTeam.logoUrl!
+                                        : 'http://10.0.2.2:8000${_detailedTeam.logoUrl}',
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Text(
+                                        _detailedTeam.name.isNotEmpty
+                                            ? _detailedTeam.name[0]
+                                            : 'T',
+                                        style: TextStyle(
+                                          color: colorScheme.primary,
+                                          fontSize: 48,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                )
+                              : Text(
+                                  _detailedTeam.name.isNotEmpty
+                                      ? _detailedTeam.name[0]
+                                      : 'T',
+                                  style: TextStyle(
+                                    color: colorScheme.primary,
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -124,15 +151,38 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        (_detailedTeam.batch ?? 'N/A').toUpperCase(),
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 12,
-                          letterSpacing: 1,
+                      if (_detailedTeam.stadium != null) ...[
+                        Text(
+                          _detailedTeam.stadium!.toUpperCase(),
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 12,
+                            letterSpacing: 1,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 4),
+                      ],
+                      if (_detailedTeam.tournament != null)
+                        Text(
+                          _detailedTeam.tournament!.name.toUpperCase(),
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            letterSpacing: 1,
+                          ),
+                        )
+                      else
+                        Text(
+                          (_detailedTeam.batch ?? 'N/A').toUpperCase(),
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 12,
+                            letterSpacing: 1,
+                          ),
+                        ),
                       const SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -385,11 +435,28 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   }
 
   Widget _buildMatchesTab() {
-    return Center(
-      child: Text(
-        'Match history and fixtures',
-        style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
-      ),
-    );
+    if (_detailedTeam.matches != null && _detailedTeam.matches!.isNotEmpty) {
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _detailedTeam.matches!.length,
+        itemBuilder: (context, index) {
+          final match = _detailedTeam.matches![index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: MatchCard(match: match),
+          );
+        },
+      );
+    } else {
+      return Center(
+        child: Text(
+          'No matches found',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
   }
 }

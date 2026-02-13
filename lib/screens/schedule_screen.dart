@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../cubits/match_cubit.dart';
 import '../models/match.dart' as model;
+import '../widgets/match_card.dart';
 import 'match_detail_screen.dart';
 
 class ScheduleScreen extends StatefulWidget {
@@ -205,7 +206,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final filteredMatches = _getFilteredMatches(allMatches);
     final groupedMatches = _getGroupedMatches(filteredMatches);
 
-    if (filteredMatches.isEmpty) {
+    // Get live matches from all matches using helper from Cubit if available, or filter manually
+    // Since MatchCubit has getLiveMatches, we use it.
+    // We need to access the Cubit here.
+    final liveMatches = context.read<MatchCubit>().getLiveMatches(allMatches);
+
+    if (filteredMatches.isEmpty && liveMatches.isEmpty) {
       return Expanded(child: _buildEmptyState());
     }
 
@@ -215,17 +221,103 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           children: [
+            // Live Matches Section
+            if (liveMatches.isNotEmpty) ...[
+              _buildLiveMatchesSection(liveMatches),
+              const SizedBox(height: 24),
+              if (filteredMatches.isNotEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Text(
+                    "SCHEDULED",
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 12),
+            ],
+
             // List of Leagues
             ...groupedMatches.entries.map((entry) {
               return _buildLeagueSection(entry.key, entry.value);
             }),
 
+            if (filteredMatches.isEmpty && liveMatches.isNotEmpty)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Center(
+                  child: Text(
+                    "No scheduled matches for this date",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ),
+
             const SizedBox(height: 24),
-            _buildHideAllToggle(groupedMatches),
+            if (filteredMatches.isNotEmpty) _buildHideAllToggle(groupedMatches),
             const SizedBox(height: 40),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLiveMatchesSection(List<model.Match> liveMatches) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const SizedBox(width: 4),
+            const Icon(Icons.circle, color: Colors.red, size: 10),
+            const SizedBox(width: 8),
+            const Text(
+              "LIVE NOW",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                liveMatches.length.toString(),
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ...liveMatches.map(
+          (match) => GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MatchDetailScreen(match: match),
+                ),
+              );
+            },
+            child: MatchCard(match: match),
+          ),
+        ),
+      ],
     );
   }
 

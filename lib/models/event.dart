@@ -123,6 +123,7 @@ class Lineup {
   final String teamId;
   final String playerId;
   final bool isStarting;
+  final int? slotIndex;
 
   // Enriched
   final Player? player;
@@ -133,6 +134,7 @@ class Lineup {
     required this.teamId,
     required this.playerId,
     required this.isStarting,
+    this.slotIndex,
     this.player,
   });
 
@@ -143,6 +145,7 @@ class Lineup {
       teamId: json['team_id'],
       playerId: json['player_id'],
       isStarting: json['is_starting'] ?? true,
+      slotIndex: json['slot_index'],
       player: json['player'] != null ? Player.fromJson(json['player']) : null,
     );
   }
