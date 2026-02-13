@@ -211,6 +211,7 @@ class StandingsTable extends StatelessWidget {
           ),
           // Table rows
           ListView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: standings.length,

@@ -80,4 +80,14 @@ class ApiService {
       throw Exception('Failed to load team $id');
     }
   }
+
+  // --- Players ---
+  Future<List<dynamic>> getPlayers() async {
+    final response = await http.get(Uri.parse('$baseUrl/players/'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load players');
+    }
+  }
 }

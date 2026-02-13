@@ -5,6 +5,7 @@ class Player {
   final int jerseyNumber;
   final String position;
   final int goals;
+  final int assists;
   final int yellowCards;
   final int redCards;
 
@@ -15,6 +16,7 @@ class Player {
     required this.jerseyNumber,
     required this.position,
     this.goals = 0,
+    this.assists = 0,
     this.yellowCards = 0,
     this.redCards = 0,
   });
@@ -27,6 +29,7 @@ class Player {
       jerseyNumber: json['jersey_number'],
       position: json['position'],
       goals: json['goals'] ?? 0,
+      assists: json['assists'] ?? 0,
       yellowCards: json['yellow_cards'] ?? 0,
       redCards: json['red_cards'] ?? 0,
     );
@@ -40,6 +43,7 @@ class Player {
       'jersey_number': jerseyNumber,
       'position': position,
       'goals': goals,
+      'assists': assists,
       'yellow_cards': yellowCards,
       'red_cards': redCards,
     };
