@@ -47,7 +47,7 @@ class _TournamentScreenState extends State<TournamentScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 210.0,
+              expandedHeight: 180.0,
               floating: false,
               pinned: true,
               backgroundColor: colorScheme.surface,
@@ -56,7 +56,7 @@ class _TournamentScreenState extends State<TournamentScreen>
                   builder: (context, state) {
                     String tournamentName = 'Loading...';
                     String country =
-                        'World'; // We don't have country in Tournament model yet, hardcode or remove
+                        'ASTU'; // We don't have country in Tournament model yet, hardcode or remove
                     String season = '2025/2026';
                     String? logoUrl;
 
@@ -148,10 +148,52 @@ class _TournamentScreenState extends State<TournamentScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            SizedBox(height: 10),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                // Season Selector Dropdown
+                                // Tournament Logo
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Image.network(
+                                      logoUrl ??
+                                          'https://tse3.mm.bing.net/th/id/OIP.pULMqVnEVIxQt3156l2PXgHaHa?rs=1&pid=ImgDetMain&o=7&rm=3',
+                                      errorBuilder: (_, _, _) => const Icon(
+                                        Icons.emoji_events,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      competitionName, // Competition Name
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      'ASTU', // Country or Region
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[400],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Spacer(),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
@@ -197,88 +239,6 @@ class _TournamentScreenState extends State<TournamentScreen>
                                       isDense: true,
                                     ),
                                   ),
-                                ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.notifications_none,
-                                      ),
-                                      onPressed: () {},
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ElevatedButton(
-                                      onPressed: () {},
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: Colors.black,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 0,
-                                        ),
-                                        minimumSize: const Size(0, 32),
-                                      ),
-                                      child: const Text(
-                                        'Following',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
-                            Row(
-                              children: [
-                                // Tournament Logo
-                                Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Image.network(
-                                      logoUrl ??
-                                          'https://tse3.mm.bing.net/th/id/OIP.pULMqVnEVIxQt3156l2PXgHaHa?rs=1&pid=ImgDetMain&o=7&rm=3',
-                                      errorBuilder: (_, _, _) => const Icon(
-                                        Icons.emoji_events,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      competitionName, // Competition Name
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      'World', // Country or Region
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[400],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ],
                             ),
