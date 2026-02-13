@@ -1,14 +1,48 @@
+class Competition {
+  final String id;
+  final String name;
+  final String? description;
+  final String? imageUrl;
+
+  Competition({
+    required this.id,
+    required this.name,
+    this.description,
+    this.imageUrl,
+  });
+
+  factory Competition.fromJson(Map<String, dynamic> json) {
+    return Competition(
+      id: json['id'],
+      name: json['name'],
+      description: json['description'],
+      imageUrl: json['image_url'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'image_url': imageUrl,
+    };
+  }
+}
+
 class Tournament {
   final String id;
   final String name;
   final int year;
   final String type;
+  final Competition? competition;
 
   Tournament({
     required this.id,
     required this.name,
     required this.year,
     required this.type,
+    this.competition,
   });
 
   factory Tournament.fromJson(Map<String, dynamic> json) {
@@ -17,6 +51,9 @@ class Tournament {
       name: json['name'],
       year: json['year'],
       type: json['type'],
+      competition: json['competition'] != null
+          ? Competition.fromJson(json['competition'])
+          : null,
     );
   }
 

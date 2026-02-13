@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'news_feed_screen.dart';
-import 'tournament_screen.dart';
 
 import 'schedule_screen.dart';
-import 'standings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,47 +15,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const ScheduleScreen(),
-    const TournamentScreen(),
     const NewsFeedScreen(),
-    const StandingsScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Only show title/appbar if NOT on TournamentScreen, as it has its own SliverAppBar
-    final bool showAppBar = _currentIndex != 1;
-
     return Scaffold(
-      appBar: showAppBar
-          ? AppBar(
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.sports_soccer,
-                    color: colorScheme.primary,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'GOALUP',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 24,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(Icons.sports_soccer, color: colorScheme.primary, size: 28),
+            const SizedBox(width: 8),
+            const Text(
+              'GOALUP',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 24,
+                letterSpacing: 1.2,
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded),
-                  onPressed: () {},
-                ),
-              ],
-            )
-          : null,
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none_rounded),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -85,19 +72,9 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Matches',
             ),
             NavigationDestination(
-              icon: Icon(Icons.emoji_events_outlined),
-              selectedIcon: Icon(Icons.emoji_events),
-              label: 'Leagues',
-            ),
-            NavigationDestination(
               icon: Icon(Icons.newspaper_outlined),
               selectedIcon: Icon(Icons.newspaper),
               label: 'News',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.leaderboard_outlined),
-              selectedIcon: Icon(Icons.leaderboard_rounded),
-              label: 'Standings',
             ),
           ],
         ),

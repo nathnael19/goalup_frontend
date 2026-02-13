@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/match.dart' as model;
+import '../screens/tournament_screen.dart';
 
 class MatchCard extends StatelessWidget {
   final model.Match match;
@@ -31,24 +32,48 @@ class MatchCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.emoji_events_outlined,
-                      size: 14,
-                      color: colorScheme.primary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      (match.tournament?.name ?? 'TOURNAMENT').toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
+                GestureDetector(
+                  onTap: () {
+                    // Navigate to TournamentScreen if competition info is available
+                    if (match.tournament?.competition != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TournamentScreen(
+                            competitionId: match.tournament!.competition!.id,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.emoji_events_outlined,
+                        size: 14,
                         color: colorScheme.primary,
-                        letterSpacing: 1.0,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Text(
+                        (match.tournament?.competition?.name ??
+                                match.tournament?.name ??
+                                'TOURNAMENT')
+                            .toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: colorScheme.primary,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 12,
+                        color: colorScheme.primary,
+                      ),
+                    ],
+                  ),
                 ),
                 if (isLive)
                   Container(

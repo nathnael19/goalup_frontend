@@ -5,6 +5,7 @@ import '../cubits/match_cubit.dart';
 import '../models/match.dart' as model;
 import '../widgets/match_card.dart';
 import 'match_detail_screen.dart';
+import 'tournament_screen.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -67,11 +68,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   ) {
     final Map<String, List<model.Match>> grouped = {};
     for (var match in filteredMatches) {
-      final tournamentName = match.tournament?.name ?? 'Other';
-      if (!grouped.containsKey(tournamentName)) {
-        grouped[tournamentName] = [];
+      // Group by competition name instead of tournament name
+      final competitionName =
+          match.tournament?.competition?.name ??
+          match.tournament?.name ??
+          'Other';
+      if (!grouped.containsKey(competitionName)) {
+        grouped[competitionName] = [];
       }
-      grouped[tournamentName]!.add(match);
+      grouped[competitionName]!.add(match);
     }
     return grouped;
   }
@@ -323,16 +328,30 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Widget _buildLeagueSection(String name, List<model.Match> matches) {
     final isCollapsed = _collapsedTournaments.contains(name);
+    // Get competition ID from first match in the group
+    final String? competitionId = matches.isNotEmpty
+        ? matches.first.tournament?.competition?.id
+        : null;
 
     return Column(
       children: [
         GestureDetector(
-          onTap: () => _toggleTournament(name),
+          onTap: () {
+            // Navigate to TournamentScreen with competition ID
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    TournamentScreen(competitionId: competitionId),
+              ),
+            );
+          },
           child: _buildCollapseHeader(
             name,
             matches.length.toString(),
             isCollapsed,
             leading: _buildFlagPlaceholder(),
+            onToggle: () => _toggleTournament(name),
           ),
         ),
         if (!isCollapsed) ...matches.map((match) => _buildMatchItem(match)),
@@ -346,6 +365,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     String count,
     bool isCollapsed, {
     Widget? leading,
+    VoidCallback? onToggle,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -372,10 +392,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               style: const TextStyle(color: Colors.grey, fontSize: 13),
             ),
           const SizedBox(width: 8),
-          Icon(
-            isCollapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-            color: Colors.grey,
-            size: 20,
+          GestureDetector(
+            onTap: onToggle,
+            child: Icon(
+              isCollapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+              color: Colors.grey,
+              size: 20,
+            ),
           ),
         ],
       ),

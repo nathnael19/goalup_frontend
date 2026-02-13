@@ -10,7 +10,9 @@ import '../widgets/match_card.dart';
 import 'standings_screen.dart'; // For StandingsTable
 
 class TournamentScreen extends StatefulWidget {
-  const TournamentScreen({super.key});
+  final String? competitionId;
+
+  const TournamentScreen({super.key, this.competitionId});
 
   @override
   State<TournamentScreen> createState() => _TournamentScreenState();
@@ -45,7 +47,7 @@ class _TournamentScreenState extends State<TournamentScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 200.0,
+              expandedHeight: 210.0,
               floating: false,
               pinned: true,
               backgroundColor: colorScheme.surface,
@@ -60,22 +62,46 @@ class _TournamentScreenState extends State<TournamentScreen>
 
                     if (state is StandingsLoaded &&
                         state.tournaments.isNotEmpty) {
-                      final tournament = state.tournaments[0]['tournament'];
-
-                      // 1. Identify the current competition ID
-                      final String? competitionId =
-                          tournament['competition']?['id'];
-                      final String competitionName =
-                          tournament['competition']?['name'] ?? 'GC Cup';
+                      // 1. Determine which competition ID to use
+                      final String? targetCompetitionId = widget.competitionId;
 
                       // 2. Filter all tournaments that belong to this competition
-                      final List<dynamic> seasonTournaments = state.tournaments
-                          .where((t) {
-                            final tComp = t['tournament']['competition'];
-                            return tComp != null &&
-                                tComp['id'] == competitionId;
-                          })
-                          .toList();
+                      List<dynamic> seasonTournaments;
+                      if (targetCompetitionId != null) {
+                        seasonTournaments = state.tournaments.where((t) {
+                          final tComp = t['tournament']['competition'];
+                          return tComp != null &&
+                              tComp['id'] == targetCompetitionId;
+                        }).toList();
+                        print(
+                          'Filtered by targetCompetitionId: found ${seasonTournaments.length} tournaments',
+                        );
+                      } else {
+                        // No competition ID passed — show the first competition's tournaments
+                        final firstComp =
+                            state.tournaments[0]['tournament']['competition'];
+                        final firstCompId = firstComp?['id'];
+                        seasonTournaments = state.tournaments.where((t) {
+                          final tComp = t['tournament']['competition'];
+                          return tComp != null && tComp['id'] == firstCompId;
+                        }).toList();
+                        print(
+                          'No competitionId passed, using first: $firstCompId, found ${seasonTournaments.length}',
+                        );
+                      }
+
+                      // Fallback: if filtering found nothing, show all
+                      if (seasonTournaments.isEmpty) {
+                        seasonTournaments = List.from(state.tournaments);
+                      }
+
+                      // 2.5 Determine competition name for header
+                      final firstValidTour = seasonTournaments.isNotEmpty
+                          ? seasonTournaments.first['tournament']
+                          : state.tournaments[0]['tournament'];
+                      final String competitionName =
+                          firstValidTour['competition']?['name'] ??
+                          'Tournament';
 
                       // Sort seasons descending by year or name
                       seasonTournaments.sort((a, b) {
@@ -100,8 +126,17 @@ class _TournamentScreenState extends State<TournamentScreen>
 
                       final selectedTournament =
                           selectedTournamentData['tournament'];
-                      _selectedTournamentId ??=
-                          selectedTournament['id']; // Initialize if null
+
+                      // Using a microtask to update state if needed to avoid build phase setState error
+                      if (_selectedTournamentId == null) {
+                        Future.microtask(() {
+                          if (mounted) {
+                            setState(() {
+                              _selectedTournamentId = selectedTournament['id'];
+                            });
+                          }
+                        });
+                      }
 
                       // 4. Construct Season Name for selected
                       final String? logoUrl =
@@ -109,7 +144,7 @@ class _TournamentScreenState extends State<TournamentScreen>
                           selectedTournament['competition']?['image_url'];
 
                       return Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 60, 20, 60),
+                        padding: const EdgeInsets.fromLTRB(20, 100, 20, 40),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -215,8 +250,8 @@ class _TournamentScreenState extends State<TournamentScreen>
                                     padding: const EdgeInsets.all(8.0),
                                     child: Image.network(
                                       logoUrl ??
-                                          'https://upload.wikimedia.org/wikipedia/en/thumb/f/f2/Premier_League_Logo.svg/1200px-Premier_League_Logo.svg.png',
-                                      errorBuilder: (_, __, ___) => const Icon(
+                                          'https://tse3.mm.bing.net/th/id/OIP.pULMqVnEVIxQt3156l2PXgHaHa?rs=1&pid=ImgDetMain&o=7&rm=3',
+                                      errorBuilder: (_, _, _) => const Icon(
                                         Icons.emoji_events,
                                         color: Colors.black,
                                       ),
@@ -282,37 +317,6 @@ class _TournamentScreenState extends State<TournamentScreen>
                                     const Icon(Icons.arrow_drop_down, size: 18),
                                   ],
                                 ),
-                              ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.notifications_none),
-                                    onPressed: () {},
-                                  ),
-                                  const SizedBox(width: 8),
-                                  ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 0,
-                                      ),
-                                      minimumSize: const Size(0, 32),
-                                    ),
-                                    child: const Text(
-                                      'Following',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ],
                           ),
@@ -400,7 +404,7 @@ class _TournamentScreenState extends State<TournamentScreen>
             StandingsTab(tournamentId: _selectedTournamentId),
             FixturesTab(tournamentId: _selectedTournamentId),
             PlayerStatsTab(tournamentId: _selectedTournamentId),
-            const Center(child: Text('Team Stats Coming Soon')), // Placeholder
+            TeamStatsTab(tournamentId: _selectedTournamentId),
           ],
         ),
       ),
@@ -418,10 +422,20 @@ class StandingsTab extends StatelessWidget {
       builder: (context, state) {
         if (state is StandingsLoaded && state.tournaments.isNotEmpty) {
           // Find specific tournament data
-          final tournamentData = state.tournaments.firstWhere(
+          // If tournamentId is null, we should try to find a tournament that matches the competition but for now
+          // we rely on the parent providing the correct ID via setState.
+          var tournamentData = state.tournaments.firstWhere(
             (t) => t['tournament']['id'] == tournamentId,
             orElse: () => state.tournaments[0],
           );
+
+          // If we have a competition context, try to at least show a tournament from that competition
+          // This helps if tournamentId is null during the very first build frame
+          if (tournamentId == null &&
+              context.read<StandingsCubit>().state is StandingsLoaded) {
+            // We don't easily have access to widget.competitionId here since this is a separate widget
+            // but usually _selectedTournamentId will catch up in the next frame.
+          }
 
           final List<dynamic> teamsJson = tournamentData['teams'];
           final List<standing_model.Standing> standings = teamsJson
@@ -611,16 +625,21 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
 
       if (widget.tournamentId != null) {
         // Filter teams that belong to this tournament
-        // Actually team model has `tournament_id` field if it's 1:N
-        // OR we iterate through teams in StandingsCubit for this tournament!
+        final tournamentTeams = teams
+            .where(
+              (t) =>
+                  t.tournament?.id == widget.tournamentId ||
+                  t.standings?.any(
+                        (s) => s.tournamentId == widget.tournamentId,
+                      ) ==
+                      true,
+            )
+            .toList();
+        final tournamentTeamIds = tournamentTeams.map((t) => t.id).toSet();
 
-        // Better: Get teams from StandingsCubit (which we know has teams for this tournament)
-        // But we are inside PlayerStatsTab which doesn't listen to StandingsCubit directly in this method.
-        // Let's stick to filtering players whose team.tournament_id matches if that exists,
-        // OR if we just ignore filtering for player stats for now as 'getPlayers' is global.
-        // OK, I'll just filter players whose team_id is present in the teams list of this tournament.
-
-        // For simplicity in this step, I will just show ALL players but ideally we filter.
+        playersJson = playersJson
+            .where((p) => tournamentTeamIds.contains(p['team_id']))
+            .toList();
       }
 
       if (mounted) {
@@ -797,6 +816,110 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
                     color ?? (isHighlighted ? Colors.blue[100] : Colors.white),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TeamStatsTab extends StatelessWidget {
+  final String? tournamentId;
+  const TeamStatsTab({super.key, this.tournamentId});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<StandingsCubit, StandingsState>(
+      builder: (context, state) {
+        if (state is StandingsLoaded && state.tournaments.isNotEmpty) {
+          final tournamentData = state.tournaments.firstWhere(
+            (t) => t['tournament']['id'] == tournamentId,
+            orElse: () => state.tournaments[0],
+          );
+
+          final List<dynamic> teamsJson = tournamentData['teams'];
+          final List<standing_model.Standing> standings = teamsJson
+              .map((s) => standing_model.Standing.fromJson(s))
+              .toList();
+
+          // Best Attack (Most Goals For)
+          final bestAttack = List<standing_model.Standing>.from(standings);
+          bestAttack.sort((a, b) => b.goalsFor.compareTo(a.goalsFor));
+
+          // Best Defense (Least Goals Against)
+          final bestDefense = List<standing_model.Standing>.from(standings);
+          bestDefense.sort((a, b) => a.goalsAgainst.compareTo(b.goalsAgainst));
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildSectionHeader('Best Attack'),
+              ...bestAttack
+                  .take(3)
+                  .map(
+                    (s) => _buildStatRow(
+                      s.team?.name ?? 'Unknown',
+                      s.goalsFor.toString(),
+                      'Goals Scored',
+                    ),
+                  ),
+              const SizedBox(height: 24),
+              _buildSectionHeader('Best Defense'),
+              ...bestDefense
+                  .take(3)
+                  .map(
+                    (s) => _buildStatRow(
+                      s.team?.name ?? 'Unknown',
+                      s.goalsAgainst.toString(),
+                      'Goals Conceded',
+                    ),
+                  ),
+            ],
+          );
+        }
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      ),
+    );
+  }
+
+  Widget _buildStatRow(String teamName, String value, String label) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(teamName, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.grey, fontSize: 10),
+              ),
+            ],
           ),
         ],
       ),
