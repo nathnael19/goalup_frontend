@@ -112,7 +112,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                                   child: Image.network(
                                     _detailedTeam.logoUrl!.startsWith('http')
                                         ? _detailedTeam.logoUrl!
-                                        : 'http://10.0.2.2:8000${_detailedTeam.logoUrl}',
+                                        : '${ApiService.baseUrl.replaceAll('/api/v1', '')}${_detailedTeam.logoUrl}',
                                     width: 100,
                                     height: 100,
                                     fit: BoxFit.cover,
@@ -191,11 +191,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                           _buildDivider(),
                           _buildQuickStat('POINTS', _getPoints()),
                           _buildDivider(),
-                          _buildQuickStat(
-                            'FORM',
-                            'W W D L W', // Keeping mock form for now
-                            isForm: true,
-                          ),
+                          _buildQuickStat('PLAYED', _getPlayed()),
                         ],
                       ),
                     ],
@@ -368,26 +364,83 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
     if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
       return '-';
     }
-    // Just showing the first one for now
-    return '4th'; // We need sorting logic for rank, keeping dummy for now
+    // Note: To get real rank, we'd need the full tournament standings.
+    // Since we only have the team's standing object here, we can't calculate rank easily.
+    // If Standing model had a 'rank' field, we'd use it.
+    // For now, let's keep it as '-' or 'N/A' unless it's in the DB.
+    return 'N/A';
   }
 
   String _getPoints() {
     if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
-      return '-';
+      return '0';
     }
     return _detailedTeam.standings!.first.points.toString();
   }
 
+  String _getPlayed() {
+    if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
+      return '0';
+    }
+    return _detailedTeam.standings!.first.played.toString();
+  }
+
   Widget _buildStatsTab() {
+    final standing = _detailedTeam.standings?.isNotEmpty == true
+        ? _detailedTeam.standings!.first
+        : null;
+
+    if (standing == null) {
+      return const Center(child: Text('No stats available'));
+    }
+
+    final int played = standing.played;
+    final int goalsFor = standing.goalsFor;
+    final int goalsAgainst = standing.goalsAgainst;
+
+    // Calculate clean sheets from matches
+    int cleanSheets = 0;
+    if (_detailedTeam.matches != null) {
+      for (var m in _detailedTeam.matches!) {
+        // Only count finished matches
+        if (m.status.name == 'finished') {
+          if (m.teamAId == _detailedTeam.id && m.scoreB == 0) {
+            cleanSheets++;
+          } else if (m.teamBId == _detailedTeam.id && m.scoreA == 0) {
+            cleanSheets++;
+          }
+        }
+      }
+    }
+
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        _buildStatRow('GOALS SCORED', '18', 0.8),
-        _buildStatRow('GOALS CONCEDED', '7', 0.3),
-        _buildStatRow('CLEAN SHEETS', '3', 0.4),
-        _buildStatRow('AVG POSSESSION', '54%', 0.6),
-        _buildStatRow('SHOTS PER GAME', '12.4', 0.7),
+        _buildStatRow(
+          'GOALS SCORED',
+          goalsFor.toString(),
+          played > 0 ? (goalsFor / (played * 3)).clamp(0, 1) : 0,
+        ),
+        _buildStatRow(
+          'GOALS CONCEDED',
+          goalsAgainst.toString(),
+          played > 0 ? (goalsAgainst / (played * 3)).clamp(0, 1) : 0,
+        ),
+        _buildStatRow(
+          'CLEAN SHEETS',
+          cleanSheets.toString(),
+          played > 0 ? (cleanSheets / played).clamp(0, 1) : 0,
+        ),
+        _buildStatRow(
+          'WINS',
+          standing.won.toString(),
+          played > 0 ? (standing.won / played).clamp(0, 1) : 0,
+        ),
+        _buildStatRow(
+          'DRAWS',
+          standing.drawn.toString(),
+          played > 0 ? (standing.drawn / played).clamp(0, 1) : 0,
+        ),
       ],
     );
   }

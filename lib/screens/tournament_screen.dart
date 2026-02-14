@@ -58,7 +58,6 @@ class _TournamentScreenState extends State<TournamentScreen>
                     String country =
                         'ASTU'; // We don't have country in Tournament model yet, hardcode or remove
                     String season = '2025/2026';
-                    String? logoUrl;
 
                     if (state is StandingsLoaded &&
                         state.tournaments.isNotEmpty) {
@@ -139,12 +138,27 @@ class _TournamentScreenState extends State<TournamentScreen>
                       }
 
                       // 4. Construct Season Name for selected
-                      final String? logoUrl =
-                          selectedTournament['image_url'] ??
-                          selectedTournament['competition']?['image_url'];
+                      final String? tLogo = selectedTournament?['image_url']
+                          ?.toString();
+                      final String? cLogo =
+                          selectedTournament?['competition']?['image_url']
+                              ?.toString();
+                      String? logoUrl = (tLogo != null && tLogo.isNotEmpty)
+                          ? tLogo
+                          : (cLogo != null && cLogo.isNotEmpty)
+                          ? cLogo
+                          : null;
+
+                      if (logoUrl != null && !logoUrl.startsWith('http')) {
+                        final serverRoot = ApiService.baseUrl.replaceAll(
+                          '/api/v1',
+                          '',
+                        );
+                        logoUrl = '$serverRoot$logoUrl';
+                      }
 
                       return Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 100, 20, 40),
+                        padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -159,17 +173,22 @@ class _TournamentScreenState extends State<TournamentScreen>
                                     color: Colors.white,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Image.network(
-                                      logoUrl ??
-                                          'https://tse3.mm.bing.net/th/id/OIP.pULMqVnEVIxQt3156l2PXgHaHa?rs=1&pid=ImgDetMain&o=7&rm=3',
-                                      errorBuilder: (_, _, _) => const Icon(
-                                        Icons.emoji_events,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: (logoUrl != null && logoUrl.isNotEmpty)
+                                      ? Image.network(
+                                          logoUrl,
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, _, _) => const Icon(
+                                            Icons.emoji_events,
+                                            color: Colors.black,
+                                            size: 30,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.emoji_events,
+                                          color: Colors.black,
+                                          size: 30,
+                                        ),
                                 ),
                                 const SizedBox(width: 16),
                                 Column(
@@ -291,16 +310,11 @@ class _TournamentScreenState extends State<TournamentScreen>
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Image.network(
-                                    logoUrl ??
-                                        'https://upload.wikimedia.org/wikipedia/en/thumb/f/f2/Premier_League_Logo.svg/1200px-Premier_League_Logo.svg.png',
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                      Icons.emoji_events,
-                                      color: Colors.black,
-                                    ),
-                                  ),
+                                clipBehavior: Clip.antiAlias,
+                                child: const Icon(
+                                  Icons.emoji_events,
+                                  color: Colors.black,
+                                  size: 30,
                                 ),
                               ),
                               const SizedBox(width: 16),
