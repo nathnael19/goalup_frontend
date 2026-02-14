@@ -92,8 +92,11 @@ class ApiService {
   }
 
   // --- News ---
-  Future<List<dynamic>> getNews() async {
-    final response = await http.get(Uri.parse('$baseUrl/news/'));
+  Future<List<dynamic>> getNews({String? category}) async {
+    final url = category != null && category != 'All'
+        ? '$baseUrl/news/?category=$category'
+        : '$baseUrl/news/';
+    final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {

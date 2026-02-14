@@ -23,10 +23,12 @@ class NewsCubit extends Cubit<NewsState> {
 
   NewsCubit(this._apiService) : super(NewsInitial());
 
-  Future<void> fetchNews() async {
+  Future<void> fetchNews({String? category}) async {
     emit(NewsLoading());
     try {
-      final List<dynamic> newsJson = await _apiService.getNews();
+      final List<dynamic> newsJson = await _apiService.getNews(
+        category: category,
+      );
       final List<News> news = newsJson
           .map((json) => News.fromJson(json))
           .toList();

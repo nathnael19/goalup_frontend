@@ -13,14 +13,15 @@ class NewsFeedScreen extends StatefulWidget {
 }
 
 class _NewsFeedScreenState extends State<NewsFeedScreen> {
-  String _selectedCategory = 'All';
-  final List<String> _categories = [
-    'All',
-    'transfer',
-    'injury',
-    'general',
-    'match_report',
-  ];
+  String _selectedCategoryLabel = 'All';
+
+  final Map<String, String?> _categoryMap = {
+    'All': null,
+    'Transfer': 'transfer',
+    'Injury': 'injury',
+    'General': 'general',
+    'Match Report': 'match_report',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +42,9 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                 const SizedBox(height: 16),
                 Text(state.message, style: const TextStyle(color: Colors.grey)),
                 TextButton(
-                  onPressed: () => context.read<NewsCubit>().fetchNews(),
+                  onPressed: () => context.read<NewsCubit>().fetchNews(
+                    category: _categoryMap[_selectedCategoryLabel],
+                  ),
                   child: const Text('Retry'),
                 ),
               ],
@@ -51,13 +54,13 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
 
         if (state is NewsLoaded) {
           final news = state.news;
-          final filteredNews = _selectedCategory == 'All'
-              ? news
-              : news.where((n) => n.category == _selectedCategory).toList();
+          // Filtering is now handled by the backend request, so news is already filtered.
 
           return Scaffold(
             body: RefreshIndicator(
-              onRefresh: () => context.read<NewsCubit>().fetchNews(),
+              onRefresh: () => context.read<NewsCubit>().fetchNews(
+                category: _categoryMap[_selectedCategoryLabel],
+              ),
               color: Colors.red,
               child: CustomScrollView(
                 slivers: [
@@ -65,17 +68,20 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: FilterChips(
-                        categories: _categories,
-                        selectedCategory: _selectedCategory,
-                        onCategorySelected: (category) {
+                        categories: _categoryMap.keys.toList(),
+                        selectedCategory: _selectedCategoryLabel,
+                        onCategorySelected: (label) {
                           setState(() {
-                            _selectedCategory = category;
+                            _selectedCategoryLabel = label;
                           });
+                          context.read<NewsCubit>().fetchNews(
+                            category: _categoryMap[label],
+                          );
                         },
                       ),
                     ),
                   ),
-                  if (filteredNews.isEmpty)
+                  if (news.isEmpty)
                     const SliverFillRemaining(
                       child: Center(
                         child: Text(
@@ -89,8 +95,8 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
-                          return NewsCard(news: filteredNews[index]);
-                        }, childCount: filteredNews.length),
+                          return NewsCard(news: news[index]);
+                        }, childCount: news.length),
                       ),
                     ),
                 ],
