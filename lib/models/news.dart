@@ -4,7 +4,7 @@ class News {
   final String category;
   final DateTime date;
   final String description;
-  final String imageUrl;
+  final String? imageUrl;
   final String? content;
   final String reporterName;
 
@@ -14,8 +14,24 @@ class News {
     required this.category,
     required this.date,
     required this.description,
-    required this.imageUrl,
+    this.imageUrl,
     required this.reporterName,
     this.content,
   });
+
+  factory News.fromJson(Map<String, dynamic> json) {
+    return News(
+      id: json['id'],
+      title: json['title'],
+      category: json['category'],
+      date: DateTime.parse(json['created_at']),
+      description: json['content'] != null && json['content'].length > 100
+          ? json['content'].substring(0, 100) + '...'
+          : json['content'] ?? '',
+      content: json['content'],
+      imageUrl: json['image_url'],
+      reporterName:
+          'GoalUp Reporter', // Reporter name not in backend NewsRead yet
+    );
+  }
 }

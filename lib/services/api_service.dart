@@ -90,4 +90,14 @@ class ApiService {
       throw Exception('Failed to load players');
     }
   }
+
+  // --- News ---
+  Future<List<dynamic>> getNews() async {
+    final response = await http.get(Uri.parse('$baseUrl/news/'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load news');
+    }
+  }
 }

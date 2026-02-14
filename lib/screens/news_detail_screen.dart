@@ -20,9 +20,9 @@ class NewsDetailScreen extends StatelessWidget {
             left: 0,
             right: 0,
             height: MediaQuery.of(context).size.height * 0.30,
-            child: news.imageUrl.isNotEmpty
+            child: news.imageUrl != null && news.imageUrl!.isNotEmpty
                 ? CachedNetworkImage(
-                    imageUrl: news.imageUrl,
+                    imageUrl: news.imageUrl!,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       color: Colors.grey[900],
