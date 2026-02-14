@@ -103,4 +103,34 @@ class ApiService {
       throw Exception('Failed to load news');
     }
   }
+
+  // --- Notifications ---
+  Future<List<dynamic>> getNotifications() async {
+    final response = await http.get(Uri.parse('$baseUrl/notifications/'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load notifications');
+    }
+  }
+
+  Future<void> markNotificationAsRead(String id) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/notifications/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'is_read': true}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark notification as read');
+    }
+  }
+
+  Future<void> markAllNotificationsAsRead() async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/notifications/read-all'),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark all notifications as read');
+    }
+  }
 }

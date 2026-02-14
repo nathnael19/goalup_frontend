@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/news_cubit.dart';
-import '../models/news.dart';
 import '../widgets/filter_chips.dart';
 import '../widgets/news_card.dart';
 

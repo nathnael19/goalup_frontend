@@ -4,6 +4,7 @@ import 'cubits/match_cubit.dart';
 import 'cubits/standings_cubit.dart';
 import 'cubits/teams_cubit.dart';
 import 'cubits/news_cubit.dart';
+import 'cubits/notification_cubit.dart';
 import 'services/api_service.dart';
 import 'screens/home_screen.dart';
 
@@ -28,6 +29,11 @@ void main() {
           BlocProvider(
             create: (context) =>
                 NewsCubit(context.read<ApiService>())..fetchNews(),
+          ),
+          BlocProvider(
+            create: (context) =>
+                NotificationCubit(context.read<ApiService>())
+                  ..fetchNotifications(),
           ),
         ],
         child: const GoalUpApp(),
