@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/notification.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 
 abstract class NotificationState {}
 
@@ -23,9 +24,12 @@ class NotificationError extends NotificationState {
 
 class NotificationCubit extends Cubit<NotificationState> {
   final ApiService _apiService;
+  final NotificationService _notificationService;
   Timer? _pollingTimer;
+  String? _lastNotificationId;
 
-  NotificationCubit(this._apiService) : super(NotificationInitial());
+  NotificationCubit(this._apiService, this._notificationService)
+    : super(NotificationInitial());
 
   void startPolling() {
     _pollingTimer?.cancel();
@@ -44,6 +48,20 @@ class NotificationCubit extends Cubit<NotificationState> {
       final List<Notification> notifications = jsonList
           .map((json) => Notification.fromJson(json))
           .toList();
+
+      if (notifications.isNotEmpty) {
+        final newest = notifications.first;
+        if (_lastNotificationId != null && _lastNotificationId != newest.id) {
+          // New notification detected! Trigger system alert
+          await _notificationService.showLocalNotification(
+            id: newest.id.hashCode,
+            title: newest.title,
+            body: newest.message,
+          );
+        }
+        _lastNotificationId = newest.id;
+      }
+
       emit(NotificationLoaded(notifications));
     } catch (e) {
       // Silent error during polling
@@ -57,6 +75,11 @@ class NotificationCubit extends Cubit<NotificationState> {
       final List<Notification> notifications = jsonList
           .map((json) => Notification.fromJson(json))
           .toList();
+
+      if (notifications.isNotEmpty) {
+        _lastNotificationId = notifications.first.id;
+      }
+
       emit(NotificationLoaded(notifications));
     } catch (e) {
       emit(NotificationError(e.toString()));

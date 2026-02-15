@@ -6,33 +6,34 @@ import 'cubits/teams_cubit.dart';
 import 'cubits/news_cubit.dart';
 import 'cubits/notification_cubit.dart';
 import 'services/api_service.dart';
+import 'services/notification_service.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final apiService = ApiService();
+  final notificationService = NotificationService();
+  await notificationService.init();
+
   runApp(
-    RepositoryProvider(
-      create: (context) => ApiService(),
+    RepositoryProvider.value(
+      value: apiService,
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
-            create: (context) =>
-                MatchCubit(context.read<ApiService>())..fetchMatches(),
+            create: (context) => MatchCubit(apiService)..fetchMatches(),
           ),
           BlocProvider(
-            create: (context) =>
-                StandingsCubit(context.read<ApiService>())..fetchStandings(),
+            create: (context) => StandingsCubit(apiService)..fetchStandings(),
           ),
           BlocProvider(
-            create: (context) =>
-                TeamsCubit(context.read<ApiService>())..fetchTeams(),
+            create: (context) => TeamsCubit(apiService)..fetchTeams(),
           ),
+          BlocProvider(create: (context) => NewsCubit(apiService)..fetchNews()),
           BlocProvider(
             create: (context) =>
-                NewsCubit(context.read<ApiService>())..fetchNews(),
-          ),
-          BlocProvider(
-            create: (context) =>
-                NotificationCubit(context.read<ApiService>())
+                NotificationCubit(apiService, notificationService)
                   ..fetchNotifications(),
           ),
         ],
