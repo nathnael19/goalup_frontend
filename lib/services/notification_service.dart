@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
@@ -7,6 +8,9 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  static final StreamController<String?> selectNotificationStream =
+      StreamController<String?>.broadcast();
 
   Future<void> init() async {
     // Android initialization settings
@@ -30,7 +34,7 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse details) {
-        // Handle notification tap - for now just opens the app
+        selectNotificationStream.add(details.payload);
       },
     );
 

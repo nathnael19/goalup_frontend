@@ -5,6 +5,7 @@ import 'cubits/standings_cubit.dart';
 import 'cubits/teams_cubit.dart';
 import 'cubits/news_cubit.dart';
 import 'cubits/notification_cubit.dart';
+import 'cubits/navigation_cubit.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'screens/home_screen.dart';
@@ -31,6 +32,7 @@ void main() async {
             create: (context) => TeamsCubit(apiService)..fetchTeams(),
           ),
           BlocProvider(create: (context) => NewsCubit(apiService)..fetchNews()),
+          BlocProvider(create: (context) => NavigationCubit()),
           BlocProvider(
             create: (context) =>
                 NotificationCubit(apiService, notificationService)

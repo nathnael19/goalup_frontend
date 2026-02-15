@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/notification_cubit.dart';
+import '../cubits/navigation_cubit.dart';
+import '../services/notification_service.dart';
 import 'news_feed_screen.dart';
 import 'notification_screen.dart';
 import 'schedule_screen.dart';
@@ -13,19 +16,30 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  StreamSubscription<String?>? _notificationSubscription;
 
   @override
   void initState() {
     super.initState();
     // Start polling for notifications when the app starts
     context.read<NotificationCubit>().startPolling();
+
+    // Listen to notification clicks
+    _notificationSubscription = NotificationService
+        .selectNotificationStream
+        .stream
+        .listen((String? payload) {
+          if (payload != null && payload.contains('"type": "news"')) {
+            context.read<NavigationCubit>().setIndex(1);
+          }
+        });
   }
 
   @override
   void dispose() {
     // Stop polling when the home screen is destroyed
     context.read<NotificationCubit>().stopPolling();
+    _notificationSubscription?.cancel();
     super.dispose();
   }
 
@@ -37,9 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final currentIndex = context.watch<NavigationCubit>().state;
 
     return Scaffold(
       appBar: AppBar(
+        // ... (title and actions logic remain same)
         title: Row(
           children: [
             Icon(Icons.sports_soccer, color: colorScheme.primary, size: 28),
@@ -114,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(index: currentIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
@@ -126,13 +142,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         child: NavigationBar(
-          selectedIndex: _currentIndex,
+          selectedIndex: currentIndex,
           height: 70,
           backgroundColor: Colors.transparent,
           onDestinationSelected: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
+            context.read<NavigationCubit>().setIndex(index);
           },
           destinations: const [
             NavigationDestination(

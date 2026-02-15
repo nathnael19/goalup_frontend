@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../cubits/notification_cubit.dart';
+import '../cubits/navigation_cubit.dart';
 import '../models/notification.dart' as model;
 
 class NotificationScreen extends StatelessWidget {
@@ -131,7 +132,12 @@ class _NotificationItem extends StatelessWidget {
           if (!notification.isRead) {
             context.read<NotificationCubit>().markAsRead(notification.id);
           }
-          // Optional: Navigate based on type
+          if (notification.type == 'news') {
+            context.read<NavigationCubit>().setIndex(1);
+            Navigator.pop(
+              context,
+            ); // Go back to home screen which now shows news
+          }
         },
       ),
     );

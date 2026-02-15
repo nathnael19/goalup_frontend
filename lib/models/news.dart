@@ -30,8 +30,7 @@ class News {
           : json['content'] ?? '',
       content: json['content'],
       imageUrl: json['image_url'],
-      reporterName:
-          'GoalUp Reporter', // Reporter name not in backend NewsRead yet
+      reporterName: json['reporter_name'] ?? 'GoalUp Reporter',
     );
   }
 }

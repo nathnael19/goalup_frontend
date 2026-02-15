@@ -58,6 +58,7 @@ class NotificationCubit extends Cubit<NotificationState> {
             id: newest.id.hashCode,
             title: newest.title,
             body: newest.message,
+            payload: '{"type": "news", "id": "${newest.id}"}',
           );
         }
         _lastNotificationId = newest.id;
