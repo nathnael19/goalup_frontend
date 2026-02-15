@@ -27,13 +27,14 @@ class NotificationCubit extends Cubit<NotificationState> {
   final NotificationService _notificationService;
   Timer? _pollingTimer;
   String? _lastNotificationId;
+  bool _initialized = false;
 
   NotificationCubit(this._apiService, this._notificationService)
     : super(NotificationInitial());
 
   void startPolling() {
     _pollingTimer?.cancel();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       _fetchNotificationsSilently();
     });
   }
@@ -51,7 +52,7 @@ class NotificationCubit extends Cubit<NotificationState> {
 
       if (notifications.isNotEmpty) {
         final newest = notifications.first;
-        if (_lastNotificationId != null && _lastNotificationId != newest.id) {
+        if (_initialized && _lastNotificationId != newest.id) {
           // New notification detected! Trigger system alert
           await _notificationService.showLocalNotification(
             id: newest.id.hashCode,
@@ -61,6 +62,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         }
         _lastNotificationId = newest.id;
       }
+      _initialized = true;
 
       emit(NotificationLoaded(notifications));
     } catch (e) {
@@ -79,6 +81,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       if (notifications.isNotEmpty) {
         _lastNotificationId = notifications.first.id;
       }
+      _initialized = true;
 
       emit(NotificationLoaded(notifications));
     } catch (e) {
