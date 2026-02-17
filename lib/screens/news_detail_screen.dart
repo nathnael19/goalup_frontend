@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/news.dart';
 
 import '../services/api_service.dart';
+import '../utils/responsive.dart';
 
 class NewsDetailScreen extends StatelessWidget {
   final News news;
@@ -38,9 +39,9 @@ class NewsDetailScreen extends StatelessWidget {
                     ),
                     errorWidget: (context, url, error) => Container(
                       color: Colors.grey[900],
-                      child: const Icon(
+                      child: Icon(
                         Icons.broken_image,
-                        size: 64,
+                        size: 64.sp,
                         color: Colors.grey,
                       ),
                     ),
@@ -65,15 +66,15 @@ class NewsDetailScreen extends StatelessWidget {
                     ),
                   ),
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Category Badge with Gradient
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 8.h,
                         ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
@@ -81,14 +82,14 @@ class NewsDetailScreen extends StatelessWidget {
                             begin: Alignment.centerLeft,
                             end: Alignment.centerRight,
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12.w),
                         ),
                         child: Text(
                           news.category.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w900,
-                            fontSize: 12,
+                            fontSize: 12.sp,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -98,8 +99,8 @@ class NewsDetailScreen extends StatelessWidget {
                       // Title
                       Text(
                         news.title,
-                        style: const TextStyle(
-                          fontSize: 28,
+                        style: TextStyle(
+                          fontSize: 28.sp,
                           fontWeight: FontWeight.w900,
                           height: 1.2,
                           color: Colors.white,
@@ -112,24 +113,24 @@ class NewsDetailScreen extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.calendar_today_outlined,
-                            size: 16,
+                            size: 16.sp,
                             color: Colors.grey[500],
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Text(
                             DateFormat('MMM d, yyyy').format(news.date),
                             style: TextStyle(
                               color: Colors.grey[500],
-                              fontSize: 14,
+                              fontSize: 14.sp,
                             ),
                           ),
-                          const SizedBox(width: 24),
+                          SizedBox(width: 24.w),
                           Icon(
                             Icons.person_outline,
-                            size: 16,
+                            size: 16.sp,
                             color: Colors.grey[500],
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Text(
                             news.reporterName,
                             style: TextStyle(
@@ -139,31 +140,31 @@ class NewsDetailScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
 
                       // Summary
                       Text(
                         news.description,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 16.sp,
                           color: Colors.grey[400],
                           height: 1.5,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20.h),
 
                       // Full Content
                       Text(
                         news.content ??
                             'Full article content goes here. This is a demo article showcasing a premium layout with smooth typography, rounded cards, and interactive features.Full article content goes here. This is a demo article showcasing a premium layout with smooth typography, rounded cards, and interactive features.Full article content goes here. This is a demo article showcasing a premium layout with smooth typography, rounded cards, and interactive features.Full article content goes here. This is a demo article showcasing a premium layout with smooth typography, rounded cards, and interactive features.Full article content goes here. This is a demo article showcasing a premium layout with smooth typography, rounded cards, and interactive features.Full article content goes here. This is a demo article showcasing a premium layout with smooth typography, rounded cards, and interactive features.',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 15.sp,
                           color: Colors.grey[500],
                           height: 1.6,
                         ),
                       ),
-                      const SizedBox(height: 48), // Padding at bottom
+                      SizedBox(height: 48.h), // Padding at bottom
                     ],
                   ),
                 ),
@@ -178,7 +179,7 @@ class NewsDetailScreen extends StatelessWidget {
             child: InkWell(
               onTap: () => Navigator.pop(context),
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.5),
                   shape: BoxShape.circle,

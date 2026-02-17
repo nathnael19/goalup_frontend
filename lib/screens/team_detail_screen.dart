@@ -4,6 +4,7 @@ import '../models/team.dart' as model;
 import '../models/player.dart';
 import '../services/api_service.dart';
 import '../widgets/match_card.dart';
+import '../utils/responsive.dart';
 
 /// Detailed view for a specific team
 class TeamDetailScreen extends StatefulWidget {
@@ -64,8 +65,8 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
       appBar: AppBar(
         title: Text(
           _detailedTeam.name.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 14,
+          style: TextStyle(
+            fontSize: 14.sp,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.2,
           ),
@@ -80,37 +81,37 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                 // Premium Team Header
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 32,
-                    horizontal: 20,
+                  padding: EdgeInsets.symmetric(
+                    vertical: 32.h,
+                    horizontal: 20.w,
                   ),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainer,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(40),
-                      bottomRight: Radius.circular(40),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(40.w),
+                      bottomRight: Radius.circular(40.w),
                     ),
                   ),
                   child: Column(
                     children: [
                       Container(
-                        width: 100,
-                        height: 100,
+                        width: 100.w,
+                        height: 100.w,
                         decoration: BoxDecoration(
                           color: colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: colorScheme.primary.withValues(alpha: 0.2),
-                            width: 4,
+                            width: 4.w,
                           ),
                         ),
                         child: Center(child: _buildTeamLogo(colorScheme)),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20.h),
                       Text(
                         _detailedTeam.name,
-                        style: const TextStyle(
-                          fontSize: 24,
+                        style: TextStyle(
+                          fontSize: 24.sp,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -133,7 +134,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                           style: TextStyle(
                             color: Colors.grey[400],
                             fontWeight: FontWeight.bold,
-                            fontSize: 10,
+                            fontSize: 10.sp,
                             letterSpacing: 1,
                           ),
                         )
@@ -167,14 +168,14 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                   controller: _tabController,
                   dividerColor: Colors.transparent,
                   indicatorSize: TabBarIndicatorSize.label,
-                  labelStyle: const TextStyle(
+                  labelStyle: TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: 13,
+                    fontSize: 13.sp,
                     letterSpacing: 0.5,
                   ),
-                  unselectedLabelStyle: const TextStyle(
+                  unselectedLabelStyle: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 13.sp,
                   ),
                   tabs: const [
                     Tab(text: 'ROSTER'),
@@ -225,7 +226,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
       _detailedTeam.name.isNotEmpty ? _detailedTeam.name[0] : 'T',
       style: TextStyle(
         color: colorScheme.primary,
-        fontSize: 48,
+        fontSize: 48.sp,
         fontWeight: FontWeight.w900,
       ),
     );
@@ -238,18 +239,18 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
           label,
           style: TextStyle(
             color: Colors.grey[600],
-            fontSize: 9,
+            fontSize: 9.sp,
             fontWeight: FontWeight.w900,
             letterSpacing: 1,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6.h),
         if (isForm)
           Row(children: value.split(' ').map((v) => _buildFormDot(v)).toList())
         else
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16.sp),
           ),
       ],
     );
@@ -263,8 +264,8 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
-      width: 12,
-      height: 12,
+      width: 12.w,
+      height: 12.w,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       child: Center(
         child: Text(
@@ -281,9 +282,9 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
 
   Widget _buildDivider() {
     return Container(
-      height: 24,
-      width: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 24),
+      height: 24.h,
+      width: 1.w,
+      margin: EdgeInsets.symmetric(horizontal: 24.w),
       color: Colors.white.withValues(alpha: 0.05),
     );
   }
@@ -316,7 +317,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
         child: Text(
           title,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 11.sp,
             fontWeight: FontWeight.w900,
             color: Colors.grey[500],
             letterSpacing: 1.5,
@@ -329,28 +330,28 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
 
   Widget _buildPlayerTile(Player player) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+      contentPadding: EdgeInsets.symmetric(vertical: 4.h),
       leading: CircleAvatar(
         backgroundColor: Colors.white.withValues(alpha: 0.05),
         child: Text(
           player.jerseyNumber.toString(),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp),
         ),
       ),
       title: Text(
         player.name,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
       ),
       subtitle: Text(
         player.position.toUpperCase(),
-        style: TextStyle(color: Colors.grey[600], fontSize: 11),
+        style: TextStyle(color: Colors.grey[600], fontSize: 11.sp),
       ),
       trailing: Text(
         player.goals > 0 ? '${player.goals} G' : '',
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w900,
           color: Colors.greenAccent,
-          fontSize: 12,
+          fontSize: 12.sp,
         ),
       ),
     );
@@ -450,17 +451,14 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                 label,
                 style: TextStyle(
                   color: Colors.grey[500],
-                  fontSize: 10,
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1,
                 ),
               ),
               Text(
                 value,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16.sp),
               ),
             ],
           ),

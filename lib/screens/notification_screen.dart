@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../cubits/notification_cubit.dart';
 import '../cubits/navigation_cubit.dart';
 import '../models/notification.dart' as model;
+import '../utils/responsive.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -45,13 +46,13 @@ class NotificationScreen extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.notifications_off_outlined,
-                      size: 64,
+                      size: 64.sp,
                       color: Colors.grey.withValues(alpha: 0.5),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
+                    SizedBox(height: 16.h),
+                    Text(
                       'No notifications yet',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.grey, fontSize: 14.sp),
                     ),
                   ],
                 ),
@@ -62,7 +63,7 @@ class NotificationScreen extends StatelessWidget {
               onRefresh: () =>
                   context.read<NotificationCubit>().fetchNotifications(),
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.w),
                 itemCount: notifications.length,
                 itemBuilder: (context, index) {
                   final notification = notifications[index];
@@ -89,12 +90,12 @@ class _NotificationItem extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
         color: notification.isRead
             ? Colors.transparent
             : colorScheme.primary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.w),
         border: Border.all(
           color: notification.isRead
               ? Colors.white.withValues(alpha: 0.05)
@@ -102,7 +103,7 @@ class _NotificationItem extends StatelessWidget {
         ),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         leading: _buildIcon(context),
         title: Text(
           notification.title,
@@ -110,21 +111,21 @@ class _NotificationItem extends StatelessWidget {
             fontWeight: notification.isRead
                 ? FontWeight.normal
                 : FontWeight.bold,
-            fontSize: 15,
+            fontSize: 15.sp,
           ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            SizedBox(height: 4.h),
             Text(
               notification.message,
-              style: TextStyle(color: Colors.grey[400], fontSize: 13),
+              style: TextStyle(color: Colors.grey[400], fontSize: 13.sp),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               DateFormat('MMM d, HH:mm').format(notification.createdAt),
-              style: TextStyle(color: Colors.grey[600], fontSize: 11),
+              style: TextStyle(color: Colors.grey[600], fontSize: 11.sp),
             ),
           ],
         ),
@@ -162,12 +163,12 @@ class _NotificationItem extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(8.w),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
-      child: Icon(iconData, color: color, size: 20),
+      child: Icon(iconData, color: color, size: 20.sp),
     );
   }
 }

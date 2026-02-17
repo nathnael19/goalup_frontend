@@ -5,6 +5,7 @@ import '../models/team.dart';
 import '../services/api_service.dart';
 import 'team_detail_screen.dart';
 import '../widgets/football_field.dart';
+import '../utils/responsive.dart';
 
 /// Detailed Match Screen showing timeline, stats, and lineups
 class MatchDetailScreen extends StatefulWidget {
@@ -106,12 +107,12 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
           // Premium Scoreboard Billboard
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 20.w),
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainer,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(40),
-                bottomRight: Radius.circular(40),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(40.w),
+                bottomRight: Radius.circular(40.w),
               ),
             ),
             child: Column(
@@ -127,12 +128,12 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
                 Text(
                   match.venue ?? 'Main Stadium, ASTU',
                   style: TextStyle(
                     color: Colors.grey[500],
-                    fontSize: 12,
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -145,14 +146,14 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
             controller: _tabController,
             dividerColor: Colors.transparent,
             indicatorSize: TabBarIndicatorSize.label,
-            labelStyle: const TextStyle(
+            labelStyle: TextStyle(
               fontWeight: FontWeight.w900,
-              fontSize: 13,
+              fontSize: 13.sp,
               letterSpacing: 0.5,
             ),
-            unselectedLabelStyle: const TextStyle(
+            unselectedLabelStyle: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 13,
+              fontSize: 13.sp,
             ),
             tabs: const [
               Tab(text: 'TIMELINE'),
@@ -199,18 +200,18 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
       child: Column(
         children: [
           Container(
-            width: 70,
-            height: 70,
+            width: 70.w,
+            height: 70.w,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.03),
               shape: BoxShape.circle,
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.05),
-                width: 2,
+                width: 2.w,
               ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(35),
+              borderRadius: BorderRadius.circular(35.w),
               child: logoUrl.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: logoUrl,
@@ -224,9 +225,9 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                             teamName.isNotEmpty
                                 ? teamName.substring(0, 1)
                                 : '?',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 32,
+                              fontSize: 32.sp,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -236,20 +237,20 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                   : Center(
                       child: Text(
                         teamName.isNotEmpty ? teamName.substring(0, 1) : '?',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 32,
+                          fontSize: 32.sp,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                     ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
             teamName,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.sp),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -264,23 +265,23 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
       children: [
         Text(
           '${match.scoreA} - ${match.scoreB}',
-          style: const TextStyle(
-            fontSize: 48,
+          style: TextStyle(
+            fontSize: 48.sp,
             fontWeight: FontWeight.w900,
             letterSpacing: -2,
           ),
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
           decoration: BoxDecoration(
             color: isLive ? Colors.red : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.w),
           ),
           child: Text(
             isLive ? 'LIVE' : 'FINAL',
             style: TextStyle(
               color: isLive ? Colors.white : Colors.grey[400],
-              fontSize: 10,
+              fontSize: 10.sp,
               fontWeight: FontWeight.w900,
               letterSpacing: 1,
             ),

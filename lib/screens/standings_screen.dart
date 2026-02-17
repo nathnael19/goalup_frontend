@@ -5,6 +5,7 @@ import '../cubits/standings_cubit.dart';
 import '../models/standing.dart' as model;
 import '../services/api_service.dart';
 import 'team_detail_screen.dart';
+import '../utils/responsive.dart';
 
 /// Standings Screen displaying tournament leaderboards
 class StandingsScreen extends StatefulWidget {
@@ -53,14 +54,14 @@ class _StandingsScreenState extends State<StandingsScreen> {
                   tabAlignment: TabAlignment.start,
                   dividerColor: Colors.transparent,
                   indicatorSize: TabBarIndicatorSize.label,
-                  labelStyle: const TextStyle(
+                  labelStyle: TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: 13,
+                    fontSize: 13.sp,
                     letterSpacing: 0.5,
                   ),
-                  unselectedLabelStyle: const TextStyle(
+                  unselectedLabelStyle: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 13.sp,
                   ),
                   tabs: groupedTournaments.map<Widget>((g) {
                     final t = g['tournament'];
@@ -102,13 +103,18 @@ class _StandingsScreenState extends State<StandingsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey[800]),
-            const SizedBox(height: 16),
+            Icon(
+              Icons.leaderboard_outlined,
+              size: 80.sp,
+              color: Colors.grey[800],
+            ),
+            SizedBox(height: 16.h),
             Text(
               'No standings available',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.bold,
+                fontSize: 14.sp,
               ),
             ),
           ],
@@ -133,13 +139,18 @@ class StandingsTable extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey[800]),
-            const SizedBox(height: 16),
+            Icon(
+              Icons.leaderboard_outlined,
+              size: 80.sp,
+              color: Colors.grey[800],
+            ),
+            SizedBox(height: 16.h),
             Text(
               'No standings available',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.bold,
+                fontSize: 14.sp,
               ),
             ),
           ],
@@ -148,28 +159,28 @@ class StandingsTable extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: Column(
         children: [
           // Table header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainer,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16.w),
+                topRight: Radius.circular(16.w),
               ),
             ),
             child: Row(
               children: [
                 SizedBox(
-                  width: 32,
+                  width: 32.w,
                   child: Text(
                     '#',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       color: Colors.grey[500],
                       letterSpacing: 1,
                     ),
@@ -181,7 +192,7 @@ class StandingsTable extends StatelessWidget {
                     'TEAM',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       color: Colors.grey[500],
                       letterSpacing: 1,
                     ),
@@ -193,18 +204,19 @@ class StandingsTable extends StatelessWidget {
                 _buildHeaderCell('L'),
                 _buildHeaderCell('GD'),
                 SizedBox(
-                  width: 32,
+                  width: 32.w,
                   child: Text(
                     'PTS',
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       color: colorScheme.primary,
                       letterSpacing: 1,
                     ),
                   ),
                 ),
+                SizedBox(width: 4.w),
               ],
             ),
           ),
@@ -234,9 +246,9 @@ class StandingsTable extends StatelessWidget {
                       }
                     : null,
                 borderRadius: isLast
-                    ? const BorderRadius.only(
-                        bottomLeft: Radius.circular(16),
-                        bottomRight: Radius.circular(16),
+                    ? BorderRadius.only(
+                        bottomLeft: Radius.circular(16.w),
+                        bottomRight: Radius.circular(16.w),
                       )
                     : null,
                 child: Container(
@@ -245,21 +257,21 @@ class StandingsTable extends StatelessWidget {
                       alpha: index % 2 == 0 ? 0.3 : 0.6,
                     ),
                     borderRadius: isLast
-                        ? const BorderRadius.only(
-                            bottomLeft: Radius.circular(16),
-                            bottomRight: Radius.circular(16),
+                        ? BorderRadius.only(
+                            bottomLeft: Radius.circular(16.w),
+                            bottomRight: Radius.circular(16.w),
                           )
                         : null,
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 14.h,
                   ),
                   child: Row(
                     children: [
                       // Rank
                       SizedBox(
-                        width: 32,
+                        width: 32.w,
                         child: Text(
                           '$rank',
                           style: TextStyle(
@@ -273,7 +285,7 @@ class StandingsTable extends StatelessWidget {
                                 : rank == 3
                                 ? Colors.brown[300]
                                 : Colors.grey[500],
-                            fontSize: 13,
+                            fontSize: 13.sp,
                           ),
                         ),
                       ),
@@ -287,7 +299,7 @@ class StandingsTable extends StatelessWidget {
                               standing.team?.name ?? '?',
                               colorScheme,
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12.w),
                             Expanded(
                               child: Text(
                                 standing.team?.name ?? 'UNKNOWN',
@@ -295,7 +307,7 @@ class StandingsTable extends StatelessWidget {
                                   fontWeight: isTopThree
                                       ? FontWeight.w900
                                       : FontWeight.bold,
-                                  fontSize: 13,
+                                  fontSize: 13.sp,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -321,7 +333,7 @@ class StandingsTable extends StatelessWidget {
                       ),
                       // Points
                       SizedBox(
-                        width: 32,
+                        width: 32.w,
                         child: Text(
                           '${standing.points}',
                           textAlign: TextAlign.right,
@@ -330,10 +342,11 @@ class StandingsTable extends StatelessWidget {
                             color: isTopThree
                                 ? colorScheme.primary
                                 : Colors.white,
-                            fontSize: 13,
+                            fontSize: 13.sp,
                           ),
                         ),
                       ),
+                      SizedBox(width: 4.w),
                     ],
                   ),
                 ),
@@ -393,8 +406,8 @@ class StandingsTable extends StatelessWidget {
     final fullLogoUrl = ApiService.getImageFullUrl(logoUrl);
 
     return Container(
-      width: 20,
-      height: 20,
+      width: 20.w,
+      height: 20.w,
       decoration: BoxDecoration(
         color: colorScheme.primary.withValues(alpha: 0.1),
         shape: BoxShape.circle,
@@ -422,7 +435,7 @@ class StandingsTable extends StatelessWidget {
         name.isNotEmpty ? name[0] : '?',
         style: TextStyle(
           color: colorScheme.primary,
-          fontSize: 10,
+          fontSize: 10.sp,
           fontWeight: FontWeight.w900,
         ),
       ),
@@ -431,13 +444,13 @@ class StandingsTable extends StatelessWidget {
 
   Widget _buildHeaderCell(String text) {
     return SizedBox(
-      width: 30,
+      width: 30.w,
       child: Text(
         text,
         textAlign: TextAlign.center,
         style: TextStyle(
           fontWeight: FontWeight.w900,
-          fontSize: 10,
+          fontSize: 10.sp,
           color: Colors.grey[500],
           letterSpacing: 1,
         ),
@@ -447,13 +460,13 @@ class StandingsTable extends StatelessWidget {
 
   Widget _buildStatCell(String text, {Color? color}) {
     return SizedBox(
-      width: 30,
+      width: 30.w,
       child: Text(
         text,
         textAlign: TextAlign.center,
         style: TextStyle(
           color: color ?? Colors.white70,
-          fontSize: 12,
+          fontSize: 12.sp,
           fontWeight: FontWeight.bold,
         ),
       ),

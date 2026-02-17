@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../widgets/match_card.dart';
 import 'match_detail_screen.dart';
 import 'tournament_screen.dart';
+import '../utils/responsive.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -130,8 +131,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final today = DateTime(now.year, now.month, now.day);
 
     return Container(
-      height: 80,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      height: 80.h,
+      padding: EdgeInsets.symmetric(vertical: 8.h),
       child: ListView.builder(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
@@ -159,8 +160,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           return GestureDetector(
             onTap: () => setState(() => _selectedDate = date),
             child: Container(
-              width: 110,
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              width: 110.w,
+              padding: EdgeInsets.symmetric(vertical: 8.h),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
@@ -184,7 +185,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       fontWeight: isSelected || isToday
                           ? FontWeight.bold
                           : FontWeight.w500,
-                      fontSize: 14,
+                      fontSize: 14.sp,
                     ),
                   ),
                   if (isToday && !isSelected)
@@ -223,25 +224,25 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       child: RefreshIndicator(
         onRefresh: _handleRefresh,
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
           children: [
             if (liveMatches.isNotEmpty) ...[
               _buildLiveMatchesSection(liveMatches),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               if (filteredMatches.isNotEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.0),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                   child: Text(
                     "SCHEDULED",
                     style: TextStyle(
                       color: Colors.grey,
                       fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       letterSpacing: 1.0,
                     ),
                   ),
                 ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
             ],
 
             ...groupedMatches.entries.map((entry) {
@@ -259,9 +260,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
               ),
 
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
             if (filteredMatches.isNotEmpty) _buildHideAllToggle(groupedMatches),
-            const SizedBox(height: 40),
+            SizedBox(height: 40.h),
           ],
         ),
       ),
@@ -277,35 +278,35 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             const SizedBox(width: 4),
             const Icon(Icons.circle, color: Colors.red, size: 10),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               "LIVE NOW",
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w900,
-                fontSize: 16,
+                fontSize: 16.sp,
                 letterSpacing: 0.5,
               ),
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
                 color: Colors.red.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12.w),
                 border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
               ),
               child: Text(
                 liveMatches.length.toString(),
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                  fontSize: 12.sp,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         ...liveMatches.map(
           (match) => GestureDetector(
             onTap: () {
@@ -350,7 +351,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           ),
         ),
         if (!isCollapsed) ...matches.map((match) => _buildMatchItem(match)),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
       ],
     );
   }
@@ -363,10 +364,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     VoidCallback? onToggle,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.w),
       ),
       child: Row(
         children: [
@@ -374,10 +375,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
+                fontSize: 15.sp,
               ),
             ),
           ),
@@ -411,7 +412,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Colors.white10, width: 0.5)),
         ),
@@ -437,18 +438,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   match.status == model.MatchStatus.finished
                       ? '${match.scoreA} - ${match.scoreB}'
                       : DateFormat('HH:mm').format(match.startTime),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 15.sp,
                   ),
                 ),
                 if (match.status == model.MatchStatus.live)
-                  const Text(
+                  Text(
                     'LIVE',
                     style: TextStyle(
                       color: Colors.red,
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

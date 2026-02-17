@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/match.dart' as model;
 import '../screens/tournament_screen.dart';
 import '../services/api_service.dart';
+import '../utils/responsive.dart';
 
 class MatchCard extends StatelessWidget {
   final model.Match match;
@@ -15,19 +16,19 @@ class MatchCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.w),
         border: Border.all(
           color: isLive
               ? Colors.red.withValues(alpha: 0.3)
               : Colors.transparent,
-          width: 2,
+          width: 2.w,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20.w),
         child: Column(
           children: [
             // Tournament & Status
@@ -51,26 +52,26 @@ class MatchCard extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.emoji_events_outlined,
-                        size: 14,
+                        size: 14.sp,
                         color: colorScheme.primary,
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6.w),
                       Text(
                         (match.tournament?.competition?.name ??
                                 match.tournament?.name ??
                                 'TOURNAMENT')
                             .toUpperCase(),
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w900,
                           color: colorScheme.primary,
                           letterSpacing: 1.0,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4.w),
                       Icon(
                         Icons.chevron_right,
-                        size: 12,
+                        size: 12.sp,
                         color: colorScheme.primary,
                       ),
                     ],
@@ -78,19 +79,19 @@ class MatchCard extends StatelessWidget {
                 ),
                 if (isLive)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.red,
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(6.w),
                     ),
-                    child: const Text(
+                    child: Text(
                       'LIVE',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 10,
+                        fontSize: 10.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -99,7 +100,7 @@ class MatchCard extends StatelessWidget {
                   Text(
                     match.status.name.toUpperCase(),
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[500],
                     ),
@@ -135,22 +136,22 @@ class MatchCard extends StatelessWidget {
                 ),
                 // Score Area
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: Column(
                     children: [
                       Text(
                         '${match.scoreA} - ${match.scoreB}',
-                        style: const TextStyle(
-                          fontSize: 32,
+                        style: TextStyle(
+                          fontSize: 32.sp,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -1,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         isLive ? 'LIVE' : 'Final',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.sp,
                           color: isLive ? Colors.red : Colors.grey[400],
                           fontWeight: isLive
                               ? FontWeight.bold
@@ -194,8 +195,8 @@ class MatchCard extends StatelessWidget {
   Widget _buildTeamLogo(String name, String? logoUrl, ColorScheme colorScheme) {
     final fullUrl = ApiService.getImageFullUrl(logoUrl);
     return Container(
-      width: 48,
-      height: 48,
+      width: 48.w,
+      height: 48.w,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
         shape: BoxShape.circle,
@@ -227,9 +228,9 @@ class MatchCard extends StatelessWidget {
     return Center(
       child: Text(
         name.isNotEmpty ? name.substring(0, 1) : '?',
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 20,
+          fontSize: 20.sp,
           color: Colors.white70,
         ),
       ),

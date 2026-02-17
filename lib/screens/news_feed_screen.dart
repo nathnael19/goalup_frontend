@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/news_cubit.dart';
 import '../widgets/filter_chips.dart';
 import '../widgets/news_card.dart';
+import '../utils/responsive.dart';
 
 class NewsFeedScreen extends StatefulWidget {
   const NewsFeedScreen({super.key});
@@ -37,9 +38,12 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text(state.message, style: const TextStyle(color: Colors.grey)),
+                Icon(Icons.error_outline, size: 48.sp, color: Colors.grey),
+                SizedBox(height: 16.h),
+                Text(
+                  state.message,
+                  style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                ),
                 TextButton(
                   onPressed: () => context.read<NewsCubit>().fetchNews(
                     category: _categoryMap[_selectedCategoryLabel],
@@ -65,7 +69,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                 slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
                       child: FilterChips(
                         categories: _categoryMap.keys.toList(),
                         selectedCategory: _selectedCategoryLabel,
@@ -91,7 +95,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
                           return NewsCard(news: news[index]);

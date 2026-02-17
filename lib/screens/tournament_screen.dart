@@ -10,6 +10,7 @@ import '../models/standing.dart' as standing_model;
 import '../widgets/match_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'standings_screen.dart'; // For StandingsTable
+import '../utils/responsive.dart';
 
 class TournamentScreen extends StatefulWidget {
   final String? competitionId;
@@ -114,7 +115,7 @@ class _TournamentScreenState extends State<TournamentScreen>
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
                   SliverAppBar(
-                    expandedHeight: 120,
+                    expandedHeight: 120.h,
                     pinned: true,
                     stretch: true,
                     backgroundColor: colorScheme.surface,
@@ -158,23 +159,23 @@ class _TournamentScreenState extends State<TournamentScreen>
                                   );
 
                                   return Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      20,
-                                      80,
-                                      20,
-                                      20,
+                                    padding: EdgeInsets.fromLTRB(
+                                      20.w,
+                                      80.h,
+                                      20.w,
+                                      20.h,
                                     ),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const SizedBox(height: 10),
+                                        SizedBox(height: 10.h),
                                         Row(
                                           children: [
                                             // Tournament Logo - Optimized with CachedNetworkImage
                                             Container(
-                                              width: 60,
-                                              height: 60,
+                                              width: 60.w,
+                                              height: 60.w,
                                               decoration: const BoxDecoration(
                                                 color: Colors.white,
                                                 shape: BoxShape.circle,
@@ -189,16 +190,16 @@ class _TournamentScreenState extends State<TournamentScreen>
                                                             strokeWidth: 2,
                                                           ),
                                                       errorWidget: (_, _, _) =>
-                                                          const Icon(
+                                                          Icon(
                                                             Icons.emoji_events,
                                                             color: Colors.black,
-                                                            size: 30,
+                                                            size: 30.sp,
                                                           ),
                                                     )
-                                                  : const Icon(
+                                                  : Icon(
                                                       Icons.emoji_events,
                                                       color: Colors.black,
-                                                      size: 30,
+                                                      size: 30.sp,
                                                     ),
                                             ),
                                             const SizedBox(width: 16),
@@ -209,8 +210,8 @@ class _TournamentScreenState extends State<TournamentScreen>
                                                 children: [
                                                   Text(
                                                     competitionName,
-                                                    style: const TextStyle(
-                                                      fontSize: 20,
+                                                    style: TextStyle(
+                                                      fontSize: 20.sp,
                                                       fontWeight:
                                                           FontWeight.w900,
                                                       color: Colors.white,
@@ -222,7 +223,7 @@ class _TournamentScreenState extends State<TournamentScreen>
                                                   Text(
                                                     'ASTU',
                                                     style: TextStyle(
-                                                      fontSize: 14,
+                                                      fontSize: 14.sp,
                                                       color: Colors.grey[400],
                                                       fontWeight:
                                                           FontWeight.w500,
@@ -232,17 +233,16 @@ class _TournamentScreenState extends State<TournamentScreen>
                                               ),
                                             ),
                                             Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 4,
-                                                  ),
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 12.w,
+                                                vertical: 4.h,
+                                              ),
                                               decoration: BoxDecoration(
                                                 color: Colors.white.withValues(
                                                   alpha: 0.1,
                                                 ),
                                                 borderRadius:
-                                                    BorderRadius.circular(20),
+                                                    BorderRadius.circular(20.w),
                                               ),
                                               child: DropdownButtonHideUnderline(
                                                 child: DropdownButton<String>(
@@ -251,14 +251,15 @@ class _TournamentScreenState extends State<TournamentScreen>
                                                   dropdownColor: const Color(
                                                     0xFF222222,
                                                   ),
-                                                  icon: const Icon(
+                                                  icon: Icon(
                                                     Icons.arrow_drop_down,
                                                     color: Colors.white,
-                                                    size: 18,
+                                                    size: 18.sp,
                                                   ),
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     color: Colors.white,
+                                                    fontSize: 12.sp,
                                                   ),
                                                   items: seasonTournaments
                                                       .map<
@@ -314,14 +315,14 @@ class _TournamentScreenState extends State<TournamentScreen>
                         indicatorColor: colorScheme.primary,
                         indicatorWeight: 3,
                         dividerColor: Colors.transparent,
-                        labelStyle: const TextStyle(
+                        labelStyle: TextStyle(
                           fontWeight: FontWeight.w900,
-                          fontSize: 13,
+                          fontSize: 13.sp,
                           letterSpacing: 0.5,
                         ),
-                        unselectedLabelStyle: const TextStyle(
+                        unselectedLabelStyle: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 13.sp,
                         ),
                         tabs: const [
                           Tab(text: 'STANDINGS'),
@@ -450,11 +451,11 @@ class FixturesTab extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.event_busy, size: 48, color: Colors.grey[800]),
-                  const SizedBox(height: 16),
+                  Icon(Icons.event_busy, size: 48.sp, color: Colors.grey[800]),
+                  SizedBox(height: 16.h),
                   Text(
                     'No upcoming matches',
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
                   ),
                 ],
               ),
@@ -462,7 +463,7 @@ class FixturesTab extends StatelessWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             itemCount: groupedMatches.length,
             itemBuilder: (context, index) {
               final dateKey = groupedMatches.keys.elementAt(index);
@@ -500,15 +501,15 @@ class FixturesTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 4,
+                    padding: EdgeInsets.symmetric(
+                      vertical: 12.h,
+                      horizontal: 4.w,
                     ),
                     child: Text(
                       headerString,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -604,7 +605,7 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
                     isHighlighted: top3Scorers.indexOf(p) == 0,
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
               ],
               if (top3Assists.isNotEmpty) ...[
                 _buildSectionHeader('Top Assists'),
@@ -618,7 +619,7 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
                     color: Colors.blue[400],
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
               ],
               if (top3Combined.isNotEmpty) ...[
                 _buildSectionHeader('Goals + Assists'),
@@ -644,15 +645,15 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 16.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
           ),
-          const Icon(Icons.chevron_right, color: Colors.grey),
+          Icon(Icons.chevron_right, color: Colors.grey, size: 20.sp),
         ],
       ),
     );
@@ -667,48 +668,54 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
     Color? color,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16.h),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 20,
+            radius: 20.w,
             backgroundColor: Colors.grey[800],
             backgroundImage: url.isNotEmpty
                 ? CachedNetworkImageProvider(url)
                 : null,
-            child: url.isEmpty ? Text(name.isNotEmpty ? name[0] : '?') : null,
+            child: url.isEmpty
+                ? Text(
+                    name.isNotEmpty ? name[0] : '?',
+                    style: TextStyle(fontSize: 16.sp),
+                  )
+                : null,
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontSize: 14.sp,
                   ),
                 ),
                 Text(
                   team,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12.sp),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
             decoration: BoxDecoration(
               color: isHighlighted
                   ? const Color(0xFF1E3A8A)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.w),
             ),
             child: Text(
               stat,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
+                fontSize: 14.sp,
                 color:
                     color ?? (isHighlighted ? Colors.blue[100] : Colors.white),
               ),
@@ -779,21 +786,21 @@ class TeamStatsTab extends StatelessWidget {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 16.h),
       child: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
       ),
     );
   }
 
   Widget _buildStatRow(String teamName, String value, String label) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.w),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

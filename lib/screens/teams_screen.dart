@@ -5,6 +5,7 @@ import '../cubits/teams_cubit.dart';
 import '../models/team.dart' as model;
 import '../services/api_service.dart';
 import 'team_detail_screen.dart';
+import '../utils/responsive.dart';
 
 /// Screen displaying a directory of all teams
 class TeamsScreen extends StatefulWidget {
@@ -46,25 +47,25 @@ class _TeamsScreenState extends State<TeamsScreen> {
       children: [
         // Search Bar
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
           child: TextField(
             controller: _searchController,
             onChanged: (value) => setState(() => _searchQuery = value),
             decoration: InputDecoration(
               hintText: 'Search teams or tournaments...',
-              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
+              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
               prefixIcon: Icon(
                 Icons.search,
                 color: colorScheme.primary,
-                size: 20,
+                size: 20.sp,
               ),
               filled: true,
               fillColor: colorScheme.surfaceContainer,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.w),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              contentPadding: EdgeInsets.symmetric(vertical: 0),
             ),
           ),
         ),
@@ -125,20 +126,20 @@ class _TeamsScreenState extends State<TeamsScreen> {
           MaterialPageRoute(builder: (context) => TeamDetailScreen(team: team)),
         );
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(20.w),
       child: Container(
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.w),
           border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
         ),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 60.w,
+              height: 60.w,
               decoration: BoxDecoration(
                 color: colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
@@ -164,11 +165,11 @@ class _TeamsScreenState extends State<TeamsScreen> {
                     )
                   : _buildLogoPlaceholder(team, colorScheme),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Text(
               team.name,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -178,12 +179,12 @@ class _TeamsScreenState extends State<TeamsScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey[600],
-                fontSize: 9,
+                fontSize: 9.sp,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
           ],
         ),
       ),

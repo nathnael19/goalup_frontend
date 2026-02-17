@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/responsive.dart';
 
 import '../models/event.dart';
 
@@ -19,13 +20,13 @@ class FootballFieldWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: const Color(0xFF1B4D3E), // Grass green
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.w),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.2),
-          width: 3,
+          width: 3.w,
         ),
       ),
       child: ClipRRect(
@@ -40,7 +41,7 @@ class FootballFieldWidget extends StatelessWidget {
 
             // Players
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
+              padding: EdgeInsets.symmetric(vertical: 20.h),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: _buildFormationRows(context),
@@ -78,7 +79,7 @@ class FootballFieldWidget extends StatelessWidget {
           right: 0,
           child: Center(
             child: Container(
-              height: 2,
+              height: 2.h,
               width: double.infinity,
               color: Colors.white.withValues(alpha: 0.2),
             ),
@@ -88,13 +89,13 @@ class FootballFieldWidget extends StatelessWidget {
         Positioned.fill(
           child: Center(
             child: Container(
-              width: 100,
-              height: 100,
+              width: 100.w,
+              height: 100.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.2),
-                  width: 2,
+                  width: 2.w,
                 ),
               ),
             ),
@@ -103,23 +104,23 @@ class FootballFieldWidget extends StatelessWidget {
         // Goal Areas (Simplified)
         Positioned(
           top: 0,
-          left: 100,
-          right: 100,
-          height: 60,
+          left: 100.w,
+          right: 100.w,
+          height: 60.h,
           child: Container(
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
                   color: Colors.white.withValues(alpha: 0.2),
-                  width: 2,
+                  width: 2.w,
                 ),
                 left: BorderSide(
                   color: Colors.white.withValues(alpha: 0.2),
-                  width: 2,
+                  width: 2.w,
                 ),
                 right: BorderSide(
                   color: Colors.white.withValues(alpha: 0.2),
-                  width: 2,
+                  width: 2.w,
                 ),
               ),
             ),
@@ -127,23 +128,23 @@ class FootballFieldWidget extends StatelessWidget {
         ),
         Positioned(
           bottom: 0,
-          left: 100,
-          right: 100,
-          height: 60,
+          left: 100.w,
+          right: 100.w,
+          height: 60.h,
           child: Container(
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
                   color: Colors.white.withValues(alpha: 0.2),
-                  width: 2,
+                  width: 2.w,
                 ),
                 left: BorderSide(
                   color: Colors.white.withValues(alpha: 0.2),
-                  width: 2,
+                  width: 2.w,
                 ),
                 right: BorderSide(
                   color: Colors.white.withValues(alpha: 0.2),
-                  width: 2,
+                  width: 2.w,
                 ),
               ),
             ),
@@ -258,50 +259,50 @@ class FootballFieldWidget extends StatelessWidget {
 
   Widget _buildPlayer(Lineup? lineup) {
     if (lineup == null) {
-      return const SizedBox(width: 40, height: 60); // Empty slot placeholder
+      return SizedBox(width: 40.w, height: 60.h); // Empty slot placeholder
     }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 40.w,
+          height: 40.w,
           decoration: BoxDecoration(
             color: teamColor,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
+            border: Border.all(color: Colors.white, width: 2.w),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+                blurRadius: 4.w,
+                offset: Offset(0, 2.h),
               ),
             ],
           ),
           child: Center(
             child: Text(
               lineup.player?.jerseyNumber.toString() ?? '',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontSize: 14.sp,
               ),
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4.h),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.w),
           ),
           child: Text(
             lineup.player?.name.split(' ').last ?? 'Player',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 10,
+              fontSize: 10.sp,
               fontWeight: FontWeight.bold,
             ),
             overflow: TextOverflow.ellipsis,
