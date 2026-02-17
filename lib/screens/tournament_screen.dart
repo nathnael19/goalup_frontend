@@ -33,7 +33,10 @@ class _TournamentScreenState extends State<TournamentScreen>
     // Fetch all necessary data
     context.read<StandingsCubit>().fetchStandings();
     context.read<MatchCubit>().fetchMatches();
-    context.read<PlayerStatsCubit>().fetchPlayerStats(widget.tournamentId);
+    context.read<PlayerStatsCubit>().fetchPlayerStats(
+      tournamentId: widget.tournamentId,
+      competitionId: widget.competitionId,
+    );
   }
 
   @override
@@ -96,10 +99,22 @@ class _TournamentScreenState extends State<TournamentScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            StandingsTab(tournamentId: widget.tournamentId),
-            FixturesTab(tournamentId: widget.tournamentId),
-            PlayerStatsTab(tournamentId: widget.tournamentId),
-            TeamStatsTab(tournamentId: widget.tournamentId),
+            StandingsTab(
+              competitionId: widget.competitionId,
+              tournamentId: widget.tournamentId,
+            ),
+            FixturesTab(
+              competitionId: widget.competitionId,
+              tournamentId: widget.tournamentId,
+            ),
+            PlayerStatsTab(
+              competitionId: widget.competitionId,
+              tournamentId: widget.tournamentId,
+            ),
+            TeamStatsTab(
+              competitionId: widget.competitionId,
+              tournamentId: widget.tournamentId,
+            ),
           ],
         ),
       ),

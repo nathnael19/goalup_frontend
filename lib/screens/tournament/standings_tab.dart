@@ -5,16 +5,22 @@ import '../../models/standing.dart' as standing_model;
 import '../../widgets/standings_table.dart';
 
 class StandingsTab extends StatelessWidget {
+  final String? competitionId;
   final String? tournamentId;
-  const StandingsTab({super.key, this.tournamentId});
+
+  const StandingsTab({super.key, this.competitionId, this.tournamentId});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<StandingsCubit, StandingsState>(
       builder: (context, state) {
         if (state is StandingsLoaded && state.tournaments.isNotEmpty) {
-          var tournamentData = state.tournaments.firstWhere(
-            (t) => t['tournament']['id'] == tournamentId,
+          final tournamentData = state.tournaments.firstWhere(
+            (t) =>
+                (tournamentId != null &&
+                    t['tournament']['id'] == tournamentId) ||
+                (competitionId != null &&
+                    t['tournament']['competition']?['id'] == competitionId),
             orElse: () => state.tournaments[0],
           );
 

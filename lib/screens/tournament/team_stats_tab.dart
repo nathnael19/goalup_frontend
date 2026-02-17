@@ -5,8 +5,9 @@ import '../../models/standing.dart' as standing_model;
 import '../../utils/responsive.dart';
 
 class TeamStatsTab extends StatelessWidget {
+  final String? competitionId;
   final String? tournamentId;
-  const TeamStatsTab({super.key, this.tournamentId});
+  const TeamStatsTab({super.key, this.competitionId, this.tournamentId});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +15,11 @@ class TeamStatsTab extends StatelessWidget {
       builder: (context, state) {
         if (state is StandingsLoaded && state.tournaments.isNotEmpty) {
           final tournamentData = state.tournaments.firstWhere(
-            (t) => t['tournament']['id'] == tournamentId,
+            (t) =>
+                (tournamentId != null &&
+                    t['tournament']['id'] == tournamentId) ||
+                (competitionId != null &&
+                    t['tournament']['competition']?['id'] == competitionId),
             orElse: () => state.tournaments[0],
           );
 

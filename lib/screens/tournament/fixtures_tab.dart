@@ -6,8 +6,10 @@ import '../../widgets/match_card.dart';
 import '../../utils/responsive.dart';
 
 class FixturesTab extends StatelessWidget {
+  final String? competitionId;
   final String? tournamentId;
-  const FixturesTab({super.key, this.tournamentId});
+
+  const FixturesTab({super.key, this.competitionId, this.tournamentId});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +19,10 @@ class FixturesTab extends StatelessWidget {
           final futureMatches = state.matches
               .where((m) => m.status == match_model.MatchStatus.scheduled)
               .where(
-                (m) => tournamentId == null || m.tournamentId == tournamentId,
+                (m) =>
+                    (tournamentId != null && m.tournamentId == tournamentId) ||
+                    (competitionId != null &&
+                        m.tournament?.competition?.id == competitionId),
               )
               .toList();
           futureMatches.sort((a, b) => a.startTime.compareTo(b.startTime));

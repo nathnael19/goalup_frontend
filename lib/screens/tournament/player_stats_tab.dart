@@ -6,8 +6,9 @@ import '../../models/player.dart';
 import '../../utils/responsive.dart';
 
 class PlayerStatsTab extends StatefulWidget {
+  final String? competitionId;
   final String? tournamentId;
-  const PlayerStatsTab({super.key, this.tournamentId});
+  const PlayerStatsTab({super.key, this.competitionId, this.tournamentId});
 
   @override
   State<PlayerStatsTab> createState() => _PlayerStatsTabState();
@@ -23,13 +24,17 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
   @override
   void didUpdateWidget(PlayerStatsTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.tournamentId != widget.tournamentId) {
+    if (oldWidget.tournamentId != widget.tournamentId ||
+        oldWidget.competitionId != widget.competitionId) {
       _triggerFetch();
     }
   }
 
   void _triggerFetch() {
-    context.read<PlayerStatsCubit>().fetchPlayerStats(widget.tournamentId);
+    context.read<PlayerStatsCubit>().fetchPlayerStats(
+      tournamentId: widget.tournamentId,
+      competitionId: widget.competitionId,
+    );
   }
 
   @override

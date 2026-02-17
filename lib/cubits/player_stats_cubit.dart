@@ -34,7 +34,10 @@ class PlayerStatsCubit extends Cubit<PlayerStatsState> {
 
   PlayerStatsCubit(this.apiService) : super(PlayerStatsInitial());
 
-  Future<void> fetchPlayerStats(String? tournamentId) async {
+  Future<void> fetchPlayerStats({
+    String? tournamentId,
+    String? competitionId,
+  }) async {
     try {
       if (state is PlayerStatsLoading) return;
 
@@ -54,21 +57,26 @@ class PlayerStatsCubit extends Cubit<PlayerStatsState> {
 
       List<Player> filteredPlayers = _allPlayers!;
 
-      if (tournamentId != null) {
-        // Fetch teams to get tournament association
+      if (tournamentId != null || competitionId != null) {
+        // Fetch teams to get tournament/competition association
         final teams = await apiService.getTeams();
-        final tournamentTeamIds = teams
+        final filteredTeamIds = teams
             .where(
               (t) =>
-                  t.tournament?.id == tournamentId ||
-                  t.standings?.any((s) => s.tournamentId == tournamentId) ==
-                      true,
+                  (tournamentId != null &&
+                      (t.tournament?.id == tournamentId ||
+                          t.standings?.any(
+                                (s) => s.tournamentId == tournamentId,
+                              ) ==
+                              true)) ||
+                  (competitionId != null &&
+                      t.tournament?.competition?.id == competitionId),
             )
             .map((t) => t.id)
             .toSet();
 
         filteredPlayers = _allPlayers!
-            .where((p) => tournamentTeamIds.contains(p.teamId))
+            .where((p) => filteredTeamIds.contains(p.teamId))
             .toList();
       }
 
