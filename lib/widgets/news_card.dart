@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/news.dart';
 import '../screens/news_detail_screen.dart';
 
+import '../services/api_service.dart';
+
 class NewsCard extends StatelessWidget {
   final News news;
   final VoidCallback? onTap;
@@ -12,6 +14,7 @@ class NewsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = ApiService.getImageFullUrl(news.imageUrl);
     return InkWell(
       onTap:
           onTap ??
@@ -40,9 +43,9 @@ class NewsCard extends StatelessWidget {
               ),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: news.imageUrl != null && news.imageUrl!.isNotEmpty
+                child: imageUrl.isNotEmpty
                     ? CachedNetworkImage(
-                        imageUrl: news.imageUrl!,
+                        imageUrl: imageUrl,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Container(
                           color: Colors.grey[900],

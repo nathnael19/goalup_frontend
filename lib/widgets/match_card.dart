@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/match.dart' as model;
 import '../screens/tournament_screen.dart';
+import '../services/api_service.dart';
 
 class MatchCard extends StatelessWidget {
   final model.Match match;
@@ -34,7 +36,6 @@ class MatchCard extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () {
-                    // Navigate to TournamentScreen if competition info is available
                     if (match.tournament?.competition != null) {
                       Navigator.push(
                         context,
@@ -116,6 +117,7 @@ class MatchCard extends StatelessWidget {
                       _buildTeamLogo(
                         match.teamA?.name ?? 'T1',
                         match.teamA?.logoUrl,
+                        colorScheme,
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -146,7 +148,7 @@ class MatchCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isLive ? '67\'' : 'Final', // Mocking time for now
+                        isLive ? 'LIVE' : 'Final',
                         style: TextStyle(
                           fontSize: 12,
                           color: isLive ? Colors.red : Colors.grey[400],
@@ -165,6 +167,7 @@ class MatchCard extends StatelessWidget {
                       _buildTeamLogo(
                         match.teamB?.name ?? 'T2',
                         match.teamB?.logoUrl,
+                        colorScheme,
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -188,7 +191,8 @@ class MatchCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamLogo(String name, String? logoUrl) {
+  Widget _buildTeamLogo(String name, String? logoUrl, ColorScheme colorScheme) {
+    final fullUrl = ApiService.getImageFullUrl(logoUrl);
     return Container(
       width: 48,
       height: 48,
@@ -198,35 +202,30 @@ class MatchCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: logoUrl != null && logoUrl.isNotEmpty
-            ? Image.network(
-                logoUrl.startsWith('http')
-                    ? logoUrl
-                    : 'http://10.0.2.2:8000$logoUrl',
+        child: fullUrl.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: fullUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Text(
-                      name.isNotEmpty ? name.substring(0, 1) : '?',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  );
-                },
-              )
-            : Center(
-                child: Text(
-                  name.isNotEmpty ? name.substring(0, 1) : '?',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.white70,
-                  ),
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-              ),
+                errorWidget: (context, error, stackTrace) =>
+                    _buildLogoPlaceholder(name),
+              )
+            : _buildLogoPlaceholder(name),
+      ),
+    );
+  }
+
+  Widget _buildLogoPlaceholder(String name) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name.substring(0, 1) : '?',
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+          color: Colors.white70,
+        ),
       ),
     );
   }

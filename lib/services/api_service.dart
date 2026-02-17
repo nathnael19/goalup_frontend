@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/match.dart';
@@ -8,9 +7,9 @@ import '../models/team.dart';
 class ApiService {
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://localhost:8000/api/v1';
+      return 'https://goalupbackend.webcode.codes/api/v1'; // Use production for web profile
     }
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       // 10.0.2.2 is the special IP for Android Emulator to access host machine
       return 'http://10.0.2.2:8000/api/v1';
     }
@@ -132,5 +131,12 @@ class ApiService {
     if (response.statusCode != 200) {
       throw Exception('Failed to mark all notifications as read');
     }
+  }
+
+  static String getImageFullUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    final serverRoot = baseUrl.replaceAll('/api/v1', '');
+    return '$serverRoot$path';
   }
 }

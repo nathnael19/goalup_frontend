@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../cubits/standings_cubit.dart';
 import '../models/standing.dart' as model;
+import '../services/api_service.dart';
 import 'team_detail_screen.dart';
 
 /// Standings Screen displaying tournament leaderboards
-///
-/// Features:
-/// - Tournament selector tabs
-/// - Standings table with team rankings
-/// - Team statistics (played, won, drawn, lost, GD, points)
-/// - Highlight top 3 positions
-/// - Pull-to-refresh functionality
 class StandingsScreen extends StatefulWidget {
   const StandingsScreen({super.key});
 
@@ -20,11 +15,6 @@ class StandingsScreen extends StatefulWidget {
 }
 
 class _StandingsScreenState extends State<StandingsScreen> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   Future<void> _handleRefresh() async {
     await context.read<StandingsCubit>().fetchStandings();
   }
@@ -278,19 +268,31 @@ class StandingsTable extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Team name
+                      // Team Logo & Name
                       Expanded(
                         flex: 3,
-                        child: Text(
-                          standing.team?.name ?? 'UNKNOWN',
-                          style: TextStyle(
-                            fontWeight: isTopThree
-                                ? FontWeight.w900
-                                : FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Row(
+                          children: [
+                            _buildTeamLogo(
+                              standing.team?.logoUrl,
+                              standing.team?.name ?? '?',
+                              colorScheme,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                standing.team?.name ?? 'UNKNOWN',
+                                style: TextStyle(
+                                  fontWeight: isTopThree
+                                      ? FontWeight.w900
+                                      : FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       // Stats
@@ -374,6 +376,46 @@ class StandingsTable extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTeamLogo(String? logoUrl, String name, ColorScheme colorScheme) {
+    final fullLogoUrl = ApiService.getImageFullUrl(logoUrl);
+
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: 0.1),
+        shape: BoxShape.circle,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: fullLogoUrl.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: fullLogoUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(strokeWidth: 1),
+                ),
+                errorWidget: (context, error, stackTrace) =>
+                    _buildLogoPlaceholder(name, colorScheme),
+              )
+            : _buildLogoPlaceholder(name, colorScheme),
+      ),
+    );
+  }
+
+  Widget _buildLogoPlaceholder(String name, ColorScheme colorScheme) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0] : '?',
+        style: TextStyle(
+          color: colorScheme.primary,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }

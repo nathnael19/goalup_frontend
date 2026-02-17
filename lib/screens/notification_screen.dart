@@ -46,7 +46,7 @@ class NotificationScreen extends StatelessWidget {
                     Icon(
                       Icons.notifications_off_outlined,
                       size: 64,
-                      color: Colors.grey.withOpacity(0.5),
+                      color: Colors.grey.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 16),
                     const Text(
@@ -93,12 +93,12 @@ class _NotificationItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: notification.isRead
             ? Colors.transparent
-            : colorScheme.primary.withOpacity(0.05),
+            : colorScheme.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: notification.isRead
-              ? Colors.white.withOpacity(0.05)
-              : colorScheme.primary.withOpacity(0.2),
+              ? Colors.white.withValues(alpha: 0.05)
+              : colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: ListTile(
@@ -164,7 +164,7 @@ class _NotificationItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: Icon(iconData, color: color, size: 20),

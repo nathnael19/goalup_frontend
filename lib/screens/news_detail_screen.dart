@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/news.dart';
 
+import '../services/api_service.dart';
+
 class NewsDetailScreen extends StatelessWidget {
   final News news;
 
@@ -10,6 +12,7 @@ class NewsDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = ApiService.getImageFullUrl(news.imageUrl);
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       body: Stack(
@@ -20,9 +23,9 @@ class NewsDetailScreen extends StatelessWidget {
             left: 0,
             right: 0,
             height: MediaQuery.of(context).size.height * 0.30,
-            child: news.imageUrl != null && news.imageUrl!.isNotEmpty
+            child: imageUrl.isNotEmpty
                 ? CachedNetworkImage(
-                    imageUrl: news.imageUrl!,
+                    imageUrl: imageUrl,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       color: Colors.grey[900],
@@ -177,7 +180,7 @@ class NewsDetailScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_back, color: Colors.white),

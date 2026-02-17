@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../cubits/match_cubit.dart';
 import '../models/match.dart' as model;
+import '../services/api_service.dart';
 import '../widgets/match_card.dart';
 import 'match_detail_screen.dart';
 import 'tournament_screen.dart';
@@ -211,9 +213,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final filteredMatches = _getFilteredMatches(allMatches);
     final groupedMatches = _getGroupedMatches(filteredMatches);
 
-    // Get live matches from all matches using helper from Cubit if available, or filter manually
-    // Since MatchCubit has getLiveMatches, we use it.
-    // We need to access the Cubit here.
     final liveMatches = context.read<MatchCubit>().getLiveMatches(allMatches);
 
     if (filteredMatches.isEmpty && liveMatches.isEmpty) {
@@ -226,7 +225,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           children: [
-            // Live Matches Section
             if (liveMatches.isNotEmpty) ...[
               _buildLiveMatchesSection(liveMatches),
               const SizedBox(height: 24),
@@ -246,7 +244,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               const SizedBox(height: 12),
             ],
 
-            // List of Leagues
             ...groupedMatches.entries.map((entry) {
               return _buildLeagueSection(entry.key, entry.value);
             }),
@@ -328,7 +325,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Widget _buildLeagueSection(String name, List<model.Match> matches) {
     final isCollapsed = _collapsedTournaments.contains(name);
-    // Get competition ID from first match in the group
     final String? competitionId = matches.isNotEmpty
         ? matches.first.tournament?.competition?.id
         : null;
@@ -337,7 +333,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       children: [
         GestureDetector(
           onTap: () {
-            // Navigate to TournamentScreen with competition ID
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -422,7 +417,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         ),
         child: Row(
           children: [
-            // Home Team Name
             Expanded(
               child: Text(
                 match.teamA?.name ?? '',
@@ -435,10 +429,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            // Home Team Logo
-            _buildTeamLogo(match.teamA?.name ?? 'A'),
+            _buildTeamLogo(match.teamA?.logoUrl, match.teamA?.name ?? 'A'),
             const SizedBox(width: 12),
-            // Time / Score
             Column(
               children: [
                 Text(
@@ -463,10 +455,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ],
             ),
             const SizedBox(width: 12),
-            // Away Team Logo
-            _buildTeamLogo(match.teamB?.name ?? 'B'),
+            _buildTeamLogo(match.teamB?.logoUrl, match.teamB?.name ?? 'B'),
             const SizedBox(width: 12),
-            // Away Team Name
             Expanded(
               child: Text(
                 match.teamB?.name ?? '',
@@ -483,7 +473,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 
-  Widget _buildTeamLogo(String name) {
+  Widget _buildTeamLogo(String? logoUrl, String name) {
+    final fullLogoUrl = ApiService.getImageFullUrl(logoUrl);
+
     return Container(
       width: 28,
       height: 28,
@@ -491,14 +483,31 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         color: Colors.grey[800],
         shape: BoxShape.circle,
       ),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name[0] : '?',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: fullLogoUrl.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: fullLogoUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(strokeWidth: 1),
+                ),
+                errorWidget: (context, error, stackTrace) =>
+                    _buildLogoPlaceholder(name),
+              )
+            : _buildLogoPlaceholder(name),
+      ),
+    );
+  }
+
+  Widget _buildLogoPlaceholder(String name) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0] : '?',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

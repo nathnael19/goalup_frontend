@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/team.dart' as model;
 import '../models/player.dart';
 import '../services/api_service.dart';
@@ -103,44 +104,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                             width: 4,
                           ),
                         ),
-                        child: Center(
-                          child:
-                              _detailedTeam.logoUrl != null &&
-                                  _detailedTeam.logoUrl!.isNotEmpty
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(50),
-                                  child: Image.network(
-                                    _detailedTeam.logoUrl!.startsWith('http')
-                                        ? _detailedTeam.logoUrl!
-                                        : '${ApiService.baseUrl.replaceAll('/api/v1', '')}${_detailedTeam.logoUrl}',
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Text(
-                                        _detailedTeam.name.isNotEmpty
-                                            ? _detailedTeam.name[0]
-                                            : 'T',
-                                        style: TextStyle(
-                                          color: colorScheme.primary,
-                                          fontSize: 48,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                )
-                              : Text(
-                                  _detailedTeam.name.isNotEmpty
-                                      ? _detailedTeam.name[0]
-                                      : 'T',
-                                  style: TextStyle(
-                                    color: colorScheme.primary,
-                                    fontSize: 48,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                        ),
+                        child: Center(child: _buildTeamLogo(colorScheme)),
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -232,6 +196,37 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildTeamLogo(ColorScheme colorScheme) {
+    final logoUrl = ApiService.getImageFullUrl(_detailedTeam.logoUrl);
+    if (logoUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(50),
+        child: CachedNetworkImage(
+          imageUrl: logoUrl,
+          width: 100,
+          height: 100,
+          fit: BoxFit.cover,
+          placeholder: (context, url) =>
+              const CircularProgressIndicator(strokeWidth: 2),
+          errorWidget: (context, error, stackTrace) =>
+              _buildLogoPlaceholder(colorScheme),
+        ),
+      );
+    }
+    return _buildLogoPlaceholder(colorScheme);
+  }
+
+  Widget _buildLogoPlaceholder(ColorScheme colorScheme) {
+    return Text(
+      _detailedTeam.name.isNotEmpty ? _detailedTeam.name[0] : 'T',
+      style: TextStyle(
+        color: colorScheme.primary,
+        fontSize: 48,
+        fontWeight: FontWeight.w900,
+      ),
     );
   }
 
@@ -364,10 +359,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
     if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
       return '-';
     }
-    // Note: To get real rank, we'd need the full tournament standings.
-    // Since we only have the team's standing object here, we can't calculate rank easily.
-    // If Standing model had a 'rank' field, we'd use it.
-    // For now, let's keep it as '-' or 'N/A' unless it's in the DB.
     return 'N/A';
   }
 

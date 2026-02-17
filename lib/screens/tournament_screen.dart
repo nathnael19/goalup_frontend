@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/standings_cubit.dart';
 import '../cubits/match_cubit.dart';
+import '../cubits/player_stats_cubit.dart';
 import '../services/api_service.dart';
 import '../models/match.dart' as match_model;
 import '../models/player.dart';
 import '../models/standing.dart' as standing_model;
 import '../widgets/match_card.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'standings_screen.dart'; // For StandingsTable
 
 class TournamentScreen extends StatefulWidget {
@@ -37,352 +39,353 @@ class _TournamentScreenState extends State<TournamentScreen>
     super.dispose();
   }
 
+  // Pre-process Data to keep build method clean
+  Map<String, dynamic>? _getTournamentData(StandingsLoaded state) {
+    if (state.tournaments.isEmpty) return null;
+
+    final String? targetCompetitionId = widget.competitionId;
+    List<dynamic> seasonTournaments;
+
+    if (targetCompetitionId != null) {
+      seasonTournaments = state.tournaments.where((t) {
+        final tComp = t['tournament']['competition'];
+        return tComp != null && tComp['id'] == targetCompetitionId;
+      }).toList();
+    } else {
+      final firstComp = state.tournaments[0]['tournament']['competition'];
+      final firstCompId = firstComp?['id'];
+      seasonTournaments = state.tournaments.where((t) {
+        final tComp = t['tournament']['competition'];
+        return tComp != null && tComp['id'] == firstCompId;
+      }).toList();
+    }
+
+    if (seasonTournaments.isEmpty) {
+      seasonTournaments = List.from(state.tournaments);
+    }
+
+    seasonTournaments.sort((a, b) {
+      int yearA = a['tournament']['year'] ?? 0;
+      int yearB = b['tournament']['year'] ?? 0;
+      return yearB.compareTo(yearA);
+    });
+
+    final selectedTournamentData = _selectedTournamentId == null
+        ? seasonTournaments.first
+        : seasonTournaments.firstWhere(
+            (t) => t['tournament']['id'] == _selectedTournamentId,
+            orElse: () => seasonTournaments.first,
+          );
+
+    final selectedTournament = selectedTournamentData['tournament'];
+
+    return {
+      'seasons': seasonTournaments,
+      'selected': selectedTournament,
+      'competitionName':
+          selectedTournament['competition']?['name'] ?? 'Tournament',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      body: NestedScrollView(
-        controller: _scrollController,
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              expandedHeight: 180.0,
-              floating: false,
-              pinned: true,
-              backgroundColor: colorScheme.surface,
-              flexibleSpace: FlexibleSpaceBar(
-                background: BlocBuilder<StandingsCubit, StandingsState>(
-                  builder: (context, state) {
-                    String tournamentName = 'Loading...';
-                    String country =
-                        'ASTU'; // We don't have country in Tournament model yet, hardcode or remove
-                    String season = '2025/2026';
-
-                    if (state is StandingsLoaded &&
-                        state.tournaments.isNotEmpty) {
-                      // 1. Determine which competition ID to use
-                      final String? targetCompetitionId = widget.competitionId;
-
-                      // 2. Filter all tournaments that belong to this competition
-                      List<dynamic> seasonTournaments;
-                      if (targetCompetitionId != null) {
-                        seasonTournaments = state.tournaments.where((t) {
-                          final tComp = t['tournament']['competition'];
-                          return tComp != null &&
-                              tComp['id'] == targetCompetitionId;
-                        }).toList();
-                        print(
-                          'Filtered by targetCompetitionId: found ${seasonTournaments.length} tournaments',
-                        );
-                      } else {
-                        // No competition ID passed — show the first competition's tournaments
-                        final firstComp =
-                            state.tournaments[0]['tournament']['competition'];
-                        final firstCompId = firstComp?['id'];
-                        seasonTournaments = state.tournaments.where((t) {
-                          final tComp = t['tournament']['competition'];
-                          return tComp != null && tComp['id'] == firstCompId;
-                        }).toList();
-                        print(
-                          'No competitionId passed, using first: $firstCompId, found ${seasonTournaments.length}',
-                        );
-                      }
-
-                      // Fallback: if filtering found nothing, show all
-                      if (seasonTournaments.isEmpty) {
-                        seasonTournaments = List.from(state.tournaments);
-                      }
-
-                      // 2.5 Determine competition name for header
-                      final firstValidTour = seasonTournaments.isNotEmpty
-                          ? seasonTournaments.first['tournament']
-                          : state.tournaments[0]['tournament'];
-                      final String competitionName =
-                          firstValidTour['competition']?['name'] ??
-                          'Tournament';
-
-                      // Sort seasons descending by year or name
-                      seasonTournaments.sort((a, b) {
-                        final tA = a['tournament'];
-                        final tB = b['tournament'];
-                        // Try to sort by year desc
-                        int yearA = tA['year'] ?? 0;
-                        int yearB = tB['year'] ?? 0;
-                        return yearB.compareTo(yearA);
-                      });
-
-                      // 3. Determine currently selected tournament
-                      final selectedTournamentData =
-                          _selectedTournamentId == null
-                          ? seasonTournaments.first
-                          : seasonTournaments.firstWhere(
-                              (t) =>
-                                  t['tournament']['id'] ==
-                                  _selectedTournamentId,
-                              orElse: () => seasonTournaments.first,
-                            );
-
-                      final selectedTournament =
-                          selectedTournamentData['tournament'];
-
-                      // Using a microtask to update state if needed to avoid build phase setState error
-                      if (_selectedTournamentId == null) {
-                        Future.microtask(() {
-                          if (mounted) {
-                            setState(() {
-                              _selectedTournamentId = selectedTournament['id'];
-                            });
-                          }
-                        });
-                      }
-
-                      // 4. Construct Season Name for selected
-                      final String? tLogo = selectedTournament?['image_url']
-                          ?.toString();
-                      final String? cLogo =
-                          selectedTournament?['competition']?['image_url']
-                              ?.toString();
-                      String? logoUrl = (tLogo != null && tLogo.isNotEmpty)
-                          ? tLogo
-                          : (cLogo != null && cLogo.isNotEmpty)
-                          ? cLogo
-                          : null;
-
-                      if (logoUrl != null && !logoUrl.startsWith('http')) {
-                        final serverRoot = ApiService.baseUrl.replaceAll(
-                          '/api/v1',
-                          '',
-                        );
-                        logoUrl = '$serverRoot$logoUrl';
-                      }
-
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<StandingsCubit, StandingsState>(
+          listener: (context, state) {
+            if (state is StandingsLoaded && _selectedTournamentId == null) {
+              final data = _getTournamentData(state);
+              if (data != null) {
+                setState(() {
+                  _selectedTournamentId = data['selected']['id'];
+                });
+              }
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
+        body: BlocBuilder<StandingsCubit, StandingsState>(
+          builder: (context, state) {
+            return NestedScrollView(
+              controller: _scrollController,
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  SliverAppBar(
+                    expandedHeight: 120,
+                    pinned: true,
+                    stretch: true,
+                    backgroundColor: colorScheme.surface,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: RepaintBoundary(
+                        child: Stack(
+                          fit: StackFit.expand,
                           children: [
-                            SizedBox(height: 10),
-                            Row(
-                              children: [
-                                // Tournament Logo
-                                Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: (logoUrl != null && logoUrl.isNotEmpty)
-                                      ? Image.network(
-                                          logoUrl,
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (_, _, _) => const Icon(
-                                            Icons.emoji_events,
-                                            color: Colors.black,
-                                            size: 30,
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.emoji_events,
-                                          color: Colors.black,
-                                          size: 30,
-                                        ),
-                                ),
-                                const SizedBox(width: 16),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      competitionName, // Competition Name
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      'ASTU', // Country or Region
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[400],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
+                            // Tournament Header Gradient
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    colorScheme.primary.withValues(alpha: 0.8),
+                                    colorScheme.surface,
                                   ],
                                 ),
-                                Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: selectedTournament['id'],
-                                      dropdownColor: const Color(
-                                        0xFF222222,
-                                      ), // Dark bg for dropdown
-                                      icon: const Icon(
-                                        Icons.arrow_drop_down,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                      items: seasonTournaments
-                                          .map<DropdownMenuItem<String>>((t) {
-                                            final tour = t['tournament'];
-                                            final y = tour['year'] ?? 2025;
-                                            final label = '$y/${y + 1}';
-                                            return DropdownMenuItem<String>(
-                                              value: tour['id'],
-                                              child: Text(label),
-                                            );
-                                          })
-                                          .toList(),
-                                      onChanged: (String? newValue) {
-                                        if (newValue != null) {
-                                          setState(() {
-                                            _selectedTournamentId = newValue;
-                                          });
-                                        }
-                                      },
-                                      isDense: true,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
+                            if (state is StandingsLoaded) ...[
+                              Builder(
+                                builder: (context) {
+                                  final data = _getTournamentData(state);
+                                  if (data == null) {
+                                    return const SizedBox.shrink();
+                                  }
+
+                                  final List<dynamic> seasonTournaments =
+                                      data['seasons'];
+                                  final selectedTournament = data['selected'];
+                                  final String competitionName =
+                                      data['competitionName'];
+
+                                  final logoUrl = ApiService.getImageFullUrl(
+                                    selectedTournament['image_url']
+                                            ?.toString() ??
+                                        selectedTournament['competition']?['image_url']
+                                            ?.toString(),
+                                  );
+
+                                  return Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      80,
+                                      20,
+                                      20,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 10),
+                                        Row(
+                                          children: [
+                                            // Tournament Logo - Optimized with CachedNetworkImage
+                                            Container(
+                                              width: 60,
+                                              height: 60,
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              clipBehavior: Clip.antiAlias,
+                                              child: logoUrl.isNotEmpty
+                                                  ? CachedNetworkImage(
+                                                      imageUrl: logoUrl,
+                                                      fit: BoxFit.contain,
+                                                      placeholder: (context, url) =>
+                                                          const CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                      errorWidget: (_, _, _) =>
+                                                          const Icon(
+                                                            Icons.emoji_events,
+                                                            color: Colors.black,
+                                                            size: 30,
+                                                          ),
+                                                    )
+                                                  : const Icon(
+                                                      Icons.emoji_events,
+                                                      color: Colors.black,
+                                                      size: 30,
+                                                    ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    competitionName,
+                                                    style: const TextStyle(
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      color: Colors.white,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  Text(
+                                                    'ASTU',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      color: Colors.grey[400],
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: DropdownButtonHideUnderline(
+                                                child: DropdownButton<String>(
+                                                  value:
+                                                      selectedTournament['id'],
+                                                  dropdownColor: const Color(
+                                                    0xFF222222,
+                                                  ),
+                                                  icon: const Icon(
+                                                    Icons.arrow_drop_down,
+                                                    color: Colors.white,
+                                                    size: 18,
+                                                  ),
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                  items: seasonTournaments
+                                                      .map<
+                                                        DropdownMenuItem<String>
+                                                      >((t) {
+                                                        final tour =
+                                                            t['tournament'];
+                                                        final y =
+                                                            tour['year'] ??
+                                                            2025;
+                                                        return DropdownMenuItem<
+                                                          String
+                                                        >(
+                                                          value: tour['id'],
+                                                          child: Text(
+                                                            '$y/${y + 1}',
+                                                          ),
+                                                        );
+                                                      })
+                                                      .toList(),
+                                                  onChanged: (String? newValue) {
+                                                    if (newValue != null) {
+                                                      setState(
+                                                        () =>
+                                                            _selectedTournamentId =
+                                                                newValue,
+                                                      );
+                                                    }
+                                                  },
+                                                  isDense: true,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ],
                         ),
-                      );
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 60, 20, 60),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Season Selector
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      season, // Dynamic Season
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.arrow_drop_down, size: 18),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          Row(
-                            children: [
-                              // Tournament Logo
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                clipBehavior: Clip.antiAlias,
-                                child: const Icon(
-                                  Icons.emoji_events,
-                                  color: Colors.black,
-                                  size: 30,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    tournamentName, // Dynamic Name
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  Text(
-                                    country, // Still hardcoded if not in API
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[400],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                      ),
+                    ),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverAppBarDelegate(
+                      TabBar(
+                        controller: _tabController,
+                        isScrollable: true,
+                        indicatorColor: colorScheme.primary,
+                        indicatorWeight: 3,
+                        dividerColor: Colors.transparent,
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13,
+                          letterSpacing: 0.5,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                        tabs: const [
+                          Tab(text: 'STANDINGS'),
+                          Tab(text: 'FIXTURES'),
+                          Tab(text: 'PLAYER STATS'),
+                          Tab(text: 'TEAM STATS'),
                         ],
                       ),
-                    );
-                  },
-                ),
-              ),
-              bottom: TabBar(
+                    ),
+                  ),
+                ];
+              },
+              body: TabBarView(
                 controller: _tabController,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                indicatorColor: colorScheme.primary,
-                indicatorWeight: 3,
-                dividerColor: Colors.transparent,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                tabs: const [
-                  Tab(text: 'Table'),
-                  Tab(text: 'Fixtures'),
-                  Tab(text: 'Player stats'),
-                  Tab(text: 'Team stats'),
+                children: [
+                  RepaintBoundary(
+                    child: StandingsTab(tournamentId: _selectedTournamentId),
+                  ),
+                  RepaintBoundary(
+                    child: FixturesTab(tournamentId: _selectedTournamentId),
+                  ),
+                  RepaintBoundary(
+                    child: PlayerStatsTab(tournamentId: _selectedTournamentId),
+                  ),
+                  RepaintBoundary(
+                    child: TeamStatsTab(tournamentId: _selectedTournamentId),
+                  ),
                 ],
               ),
-            ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            StandingsTab(tournamentId: _selectedTournamentId),
-            FixturesTab(tournamentId: _selectedTournamentId),
-            PlayerStatsTab(tournamentId: _selectedTournamentId),
-            TeamStatsTab(tournamentId: _selectedTournamentId),
-          ],
+            );
+          },
         ),
       ),
     );
+  }
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate(this._tabBar);
+
+  final TabBar _tabBar;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Theme.of(
+        context,
+      ).colorScheme.surface, // Background color for the tab bar
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
   }
 }
 
@@ -395,21 +398,10 @@ class StandingsTab extends StatelessWidget {
     return BlocBuilder<StandingsCubit, StandingsState>(
       builder: (context, state) {
         if (state is StandingsLoaded && state.tournaments.isNotEmpty) {
-          // Find specific tournament data
-          // If tournamentId is null, we should try to find a tournament that matches the competition but for now
-          // we rely on the parent providing the correct ID via setState.
           var tournamentData = state.tournaments.firstWhere(
             (t) => t['tournament']['id'] == tournamentId,
             orElse: () => state.tournaments[0],
           );
-
-          // If we have a competition context, try to at least show a tournament from that competition
-          // This helps if tournamentId is null during the very first build frame
-          if (tournamentId == null &&
-              context.read<StandingsCubit>().state is StandingsLoaded) {
-            // We don't easily have access to widget.competitionId here since this is a separate widget
-            // but usually _selectedTournamentId will catch up in the next frame.
-          }
 
           final List<dynamic> teamsJson = tournamentData['teams'];
           final List<standing_model.Standing> standings = teamsJson
@@ -435,7 +427,6 @@ class FixturesTab extends StatelessWidget {
     return BlocBuilder<MatchCubit, MatchState>(
       builder: (context, state) {
         if (state is MatchLoaded) {
-          // Filter for future matches AND selected tournament
           final futureMatches = state.matches
               .where((m) => m.status == match_model.MatchStatus.scheduled)
               .where(
@@ -444,10 +435,8 @@ class FixturesTab extends StatelessWidget {
               .toList();
           futureMatches.sort((a, b) => a.startTime.compareTo(b.startTime));
 
-          // Group by Date
           final Map<String, List<match_model.Match>> groupedMatches = {};
           for (var match in futureMatches) {
-            // Simple date formatting YYYY-MM-DD for key
             final dateKey =
                 "${match.startTime.year}-${match.startTime.month}-${match.startTime.day}";
             if (!groupedMatches.containsKey(dateKey)) {
@@ -480,8 +469,6 @@ class FixturesTab extends StatelessWidget {
               final matches = groupedMatches[dateKey]!;
               final date = matches.first.startTime;
 
-              // Format date header like "Saturday, February 21"
-              // Using basic list of months since intl package might not be added
               final months = [
                 'January',
                 'February',
@@ -551,173 +538,107 @@ class PlayerStatsTab extends StatefulWidget {
 }
 
 class _PlayerStatsTabState extends State<PlayerStatsTab> {
-  // Mocking for now as we need an endpoint or logic to get players
-  // In real app, we'd fetch this via Cubit
-  List<Player> players = [];
-  bool isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _fetchPlayers();
+    _triggerFetch();
   }
 
   @override
   void didUpdateWidget(PlayerStatsTab oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.tournamentId != widget.tournamentId) {
-      _fetchPlayers();
+      _triggerFetch();
     }
   }
 
-  Future<void> _fetchPlayers() async {
-    // Simulate fetch or use ApiService if we add getPlayers there
-    // For now, I'll access ApiService via context to get ALL teams then extract players?
-    // Too complex for a quick UI demo.
-    // Let's check if we can add getPlayers to ApiService quickly.
-    // I'll assume I can add it.
-    try {
-      if (!mounted) return;
-      setState(() {
-        isLoading = true;
-      });
-
-      final apiService = context.read<ApiService>();
-      var playersJson = await apiService.getPlayers();
-
-      // Filter by team's tournament if possible
-      // But players endpoint just returns all players.
-      // We need to filter players whose team belongs to current tournament.
-      // fetch teams first
-      final teams = await apiService.getTeams();
-      final teamMap = {for (var t in teams) t.id: t.name};
-
-      // Filter teams by tournamentId? Team model has tournamentId?
-      // Team model has 'tournament_id' (singular or list? Model says singular in some places but actually M2M in backend?)
-      // Check Team model.
-      // Assuming straightforward for now: filtering in client.
-
-      if (widget.tournamentId != null) {
-        // Filter teams that belong to this tournament
-        final tournamentTeams = teams
-            .where(
-              (t) =>
-                  t.tournament?.id == widget.tournamentId ||
-                  t.standings?.any(
-                        (s) => s.tournamentId == widget.tournamentId,
-                      ) ==
-                      true,
-            )
-            .toList();
-        final tournamentTeamIds = tournamentTeams.map((t) => t.id).toSet();
-
-        playersJson = playersJson
-            .where((p) => tournamentTeamIds.contains(p['team_id']))
-            .toList();
-      }
-
-      if (mounted) {
-        setState(() {
-          players = playersJson.map((json) {
-            final player = Player.fromJson(json);
-            return player;
-          }).toList();
-
-          this.teamMap = teamMap; // Store for UI lookup
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    }
+  void _triggerFetch() {
+    context.read<PlayerStatsCubit>().fetchPlayerStats(widget.tournamentId);
   }
-
-  Map<String, String> teamMap = {};
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) return const Center(child: CircularProgressIndicator());
+    return BlocBuilder<PlayerStatsCubit, PlayerStatsState>(
+      builder: (context, state) {
+        if (state is PlayerStatsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    // Sort for top scorers
-    final topScorers = List<Player>.from(players);
-    topScorers.sort((a, b) => b.goals.compareTo(a.goals));
-    final top3Scorers = topScorers.take(3).toList();
+        if (state is PlayerStatsError) {
+          return Center(child: Text(state.message));
+        }
 
-    // Sort for assists (assuming backend will have this, using random mock field if not,
-    // but Player model has goals, yellowCards, redCards. No assists field in current model.
-    // I shall check Player model again. Verified: No assists field.
-    // I will use yellow cards as a proxy for "Assists" demo OR just hide it/mock it
-    // since user asked for REAL data. I should probably tell user "Assists" not in DB yet.
-    // For now, let's just show Top Scorers and maybe "Discipline" (Yellow Cards) instead of Assists?
-    // Or just show Top Scorers. User asked for "Top Scorer, Assists".
-    // I will stick to Top Scorers for now and maybe Red Cards?
-    // Or just mock assists to 0 since it's missing from DB schema confirmed in previous turns.
-    // Wait, let's just show top scorers.
+        if (state is PlayerStatsLoaded) {
+          final players = state.players;
+          final teamMap = state.teamMap;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (top3Scorers.isNotEmpty) ...[
-          _buildSectionHeader('Top Scorers'),
-          ...top3Scorers.map(
-            (p) => _buildPlayerRow(
-              p.name,
-              teamMap[p.teamId] ?? 'Unknown',
-              p.goals.toString(),
-              '', // No photo URL in player model yet
-              isHighlighted: top3Scorers.indexOf(p) == 0,
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
+          if (players.isEmpty) {
+            return const Center(child: Text('No player data available'));
+          }
 
-        // Show Assists
-        _buildSectionHeader('Top Assists'),
-        ...(() {
+          final topScorers = List<Player>.from(players);
+          topScorers.sort((a, b) => b.goals.compareTo(a.goals));
+          final top3Scorers = topScorers.take(3).toList();
+
           final topAssists = List<Player>.from(players);
           topAssists.sort((a, b) => b.assists.compareTo(a.assists));
-          return topAssists
-              .take(3)
-              .map(
-                (p) => _buildPlayerRow(
-                  p.name,
-                  teamMap[p.teamId] ?? 'Unknown',
-                  p.assists.toString(),
-                  '',
-                  isHighlighted: topAssists.indexOf(p) == 0,
-                  color: Colors.blue[400],
-                ),
-              )
-              .toList();
-        })(),
-        const SizedBox(height: 24),
+          final top3Assists = topAssists.take(3).toList();
 
-        // Show Goals + Assists
-        _buildSectionHeader('Goals + Assists'),
-        ...(() {
           final combined = List<Player>.from(players);
           combined.sort(
             (a, b) => (b.goals + b.assists).compareTo(a.goals + a.assists),
           );
-          return combined
-              .take(3)
-              .map(
-                (p) => _buildPlayerRow(
-                  p.name,
-                  teamMap[p.teamId] ?? 'Unknown',
-                  '${p.goals + p.assists}',
-                  '',
-                  isHighlighted: combined.indexOf(p) == 0,
-                  color: Colors.purple[400],
+          final top3Combined = combined.take(3).toList();
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (top3Scorers.isNotEmpty) ...[
+                _buildSectionHeader('Top Scorers'),
+                ...top3Scorers.map(
+                  (p) => _buildPlayerRow(
+                    p.name,
+                    teamMap[p.teamId] ?? 'Unknown',
+                    p.goals.toString(),
+                    '',
+                    isHighlighted: top3Scorers.indexOf(p) == 0,
+                  ),
                 ),
-              )
-              .toList();
-        })(),
-      ],
+                const SizedBox(height: 24),
+              ],
+              if (top3Assists.isNotEmpty) ...[
+                _buildSectionHeader('Top Assists'),
+                ...top3Assists.map(
+                  (p) => _buildPlayerRow(
+                    p.name,
+                    teamMap[p.teamId] ?? 'Unknown',
+                    p.assists.toString(),
+                    '',
+                    isHighlighted: top3Assists.indexOf(p) == 0,
+                    color: Colors.blue[400],
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+              if (top3Combined.isNotEmpty) ...[
+                _buildSectionHeader('Goals + Assists'),
+                ...top3Combined.map(
+                  (p) => _buildPlayerRow(
+                    p.name,
+                    teamMap[p.teamId] ?? 'Unknown',
+                    '${p.goals + p.assists}',
+                    '',
+                    isHighlighted: top3Combined.indexOf(p) == 0,
+                    color: Colors.purple[400],
+                  ),
+                ),
+              ],
+            ],
+          );
+        }
+
+        return const Center(child: Text('Initialize player stats...'));
+      },
     );
   }
 
@@ -752,7 +673,9 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
           CircleAvatar(
             radius: 20,
             backgroundColor: Colors.grey[800],
-            backgroundImage: url.isNotEmpty ? NetworkImage(url) : null,
+            backgroundImage: url.isNotEmpty
+                ? CachedNetworkImageProvider(url)
+                : null,
             child: url.isEmpty ? Text(name.isNotEmpty ? name[0] : '?') : null,
           ),
           const SizedBox(width: 12),
@@ -778,7 +701,7 @@ class _PlayerStatsTabState extends State<PlayerStatsTab> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               color: isHighlighted
-                  ? const Color(0xFF1E3A8A) // Darker blue background
+                  ? const Color(0xFF1E3A8A)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -816,11 +739,9 @@ class TeamStatsTab extends StatelessWidget {
               .map((s) => standing_model.Standing.fromJson(s))
               .toList();
 
-          // Best Attack (Most Goals For)
           final bestAttack = List<standing_model.Standing>.from(standings);
           bestAttack.sort((a, b) => b.goalsFor.compareTo(a.goalsFor));
 
-          // Best Defense (Least Goals Against)
           final bestDefense = List<standing_model.Standing>.from(standings);
           bestDefense.sort((a, b) => a.goalsAgainst.compareTo(b.goalsAgainst));
 
@@ -871,7 +792,7 @@ class TeamStatsTab extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

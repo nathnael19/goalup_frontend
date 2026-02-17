@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../cubits/teams_cubit.dart';
 import '../models/team.dart' as model;
+import '../services/api_service.dart';
 import 'team_detail_screen.dart';
 
 /// Screen displaying a directory of all teams
@@ -105,11 +107,10 @@ class _TeamsScreenState extends State<TeamsScreen> {
 
   Widget _buildTeamCard(model.Team team) {
     final colorScheme = Theme.of(context).colorScheme;
+    final logoUrl = ApiService.getImageFullUrl(team.logoUrl);
 
     return InkWell(
       onTap: () {
-        // We'll keep Map for now if TeamDetailScreen expects it,
-        // but ideally it should use model.Team
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => TeamDetailScreen(team: team)),
@@ -133,15 +134,19 @@ class _TeamsScreenState extends State<TeamsScreen> {
                 color: colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Center(
-                child: Text(
-                  team.name[0],
-                  style: TextStyle(
-                    color: colorScheme.primary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: logoUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: logoUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        errorWidget: (context, error, stackTrace) =>
+                            _buildLogoPlaceholder(team, colorScheme),
+                      )
+                    : _buildLogoPlaceholder(team, colorScheme),
               ),
             ),
             const SizedBox(height: 16),
@@ -164,24 +169,20 @@ class _TeamsScreenState extends State<TeamsScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            /*
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                '14 PLAYERS', // Roster not available in list view yet
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-            */
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoPlaceholder(model.Team team, ColorScheme colorScheme) {
+    return Center(
+      child: Text(
+        team.name.isNotEmpty ? team.name[0] : '?',
+        style: TextStyle(
+          color: colorScheme.primary,
+          fontSize: 24,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );

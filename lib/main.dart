@@ -6,6 +6,7 @@ import 'cubits/teams_cubit.dart';
 import 'cubits/news_cubit.dart';
 import 'cubits/notification_cubit.dart';
 import 'cubits/navigation_cubit.dart';
+import 'cubits/player_stats_cubit.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'screens/home_screen.dart';
@@ -38,6 +39,7 @@ void main() async {
                 NotificationCubit(apiService, notificationService)
                   ..fetchNotifications(),
           ),
+          BlocProvider(create: (context) => PlayerStatsCubit(apiService)),
         ],
         child: const GoalUpApp(),
       ),

@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .stream
         .listen((String? payload) {
           if (payload != null && payload.contains('"type": "news"')) {
-            context.read<NavigationCubit>().setIndex(1);
+            if (mounted) context.read<NavigationCubit>().setIndex(1);
           }
         });
   }

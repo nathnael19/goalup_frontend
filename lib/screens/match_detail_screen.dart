@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/match.dart' as model;
 import '../models/team.dart';
+import '../services/api_service.dart';
 import 'team_detail_screen.dart';
 import '../widgets/football_field.dart';
 
@@ -17,11 +19,13 @@ class MatchDetailScreen extends StatefulWidget {
 class _MatchDetailScreenState extends State<MatchDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late List<Map<String, dynamic>> _memoizedEvents;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _memoizedEvents = _generateEvents();
   }
 
   @override
@@ -30,7 +34,53 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     super.dispose();
   }
 
-  //
+  List<Map<String, dynamic>> _generateEvents() {
+    final List<Map<String, dynamic>> events = [];
+    final match = widget.match;
+
+    // Add Goals
+    if (match.goals != null) {
+      for (var goal in match.goals!) {
+        events.add({
+          'min': goal.minute,
+          'player': goal.player?.name ?? 'Unknown',
+          'team': goal.teamId == match.teamAId ? 'home' : 'away',
+          'type': 'goal',
+          'detail': goal.isOwnGoal ? '(OG)' : '',
+        });
+      }
+    }
+
+    // Add Cards
+    if (match.cards != null) {
+      for (var card in match.cards!) {
+        events.add({
+          'min': card.minute,
+          'player': card.player?.name ?? 'Unknown',
+          'team': card.teamId == match.teamAId ? 'home' : 'away',
+          'type': card.type == 'yellow' ? 'yellow_card' : 'red_card',
+          'detail': '',
+        });
+      }
+    }
+
+    // Add Substitutions
+    if (match.substitutions != null) {
+      for (var sub in match.substitutions!) {
+        events.add({
+          'min': sub.minute,
+          'player': '${sub.playerIn?.name} for ${sub.playerOut?.name}',
+          'team': sub.teamId == match.teamAId ? 'home' : 'away',
+          'type': 'sub',
+          'detail': '',
+        });
+      }
+    }
+
+    events.sort((a, b) => (a['min'] as int).compareTo(b['min'] as int));
+    return events;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -56,7 +106,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
           // Premium Scoreboard Billboard
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainer,
               borderRadius: const BorderRadius.only(
@@ -77,7 +127,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 Text(
                   match.venue ?? 'Main Stadium, ASTU',
                   style: TextStyle(
@@ -89,8 +139,6 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
               ],
             ),
           ),
-
-          const SizedBox(height: 8),
 
           // Custom Tabs
           TabBar(
@@ -135,6 +183,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     required bool isHome,
   }) {
     final teamName = team?.name ?? fallbackName;
+    final logoUrl = ApiService.getImageFullUrl(team?.logoUrl);
 
     return GestureDetector(
       onTap: () {
@@ -162,13 +211,14 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(35),
-              child: team?.logoUrl != null && team!.logoUrl!.isNotEmpty
-                  ? Image.network(
-                      team.logoUrl!.startsWith('http')
-                          ? team.logoUrl!
-                          : 'http://10.0.2.2:8000${team.logoUrl}',
+              child: logoUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: logoUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
+                      placeholder: (context, url) => const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      errorWidget: (context, error, stackTrace) {
                         return Center(
                           child: Text(
                             teamName.isNotEmpty
@@ -200,6 +250,8 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
             teamName,
             textAlign: TextAlign.center,
             style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -225,7 +277,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            isLive ? '67\'' : 'FINAL',
+            isLive ? 'LIVE' : 'FINAL',
             style: TextStyle(
               color: isLive ? Colors.white : Colors.grey[400],
               fontSize: 10,
@@ -239,52 +291,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
   }
 
   Widget _buildTimelineTab() {
-    final List<Map<String, dynamic>> events = [];
-    final match = widget.match;
-
-    // Add Goals
-    if (match.goals != null) {
-      for (var goal in match.goals!) {
-        events.add({
-          'min': goal.minute,
-          'player': goal.player?.name ?? 'Unknown',
-          'team': goal.teamId == match.teamAId ? 'home' : 'away',
-          'type': 'goal',
-          'detail': goal.isOwnGoal ? '(OG)' : '',
-        });
-      }
-    }
-
-    // Add Cards
-    if (match.cards != null) {
-      for (var card in match.cards!) {
-        events.add({
-          'min': card.minute,
-          'player': card.player?.name ?? 'Unknown',
-          'team': card.teamId == match.teamAId ? 'home' : 'away',
-          'type': card.type == 'yellow' ? 'yellow_card' : 'red_card',
-          'detail': '',
-        });
-      }
-    }
-
-    // Add Substitutions (Optional, depending on UI preference)
-    if (match.substitutions != null) {
-      for (var sub in match.substitutions!) {
-        events.add({
-          'min': sub.minute,
-          'player': '${sub.playerIn?.name} for ${sub.playerOut?.name}',
-          'team': sub.teamId == match.teamAId ? 'home' : 'away',
-          'type': 'sub',
-          'detail': '',
-        });
-      }
-    }
-
-    // Sort by minute
-    events.sort((a, b) => (a['min'] as int).compareTo(b['min'] as int));
-
-    if (events.isEmpty) {
+    if (_memoizedEvents.isEmpty) {
       return Center(
         child: Text(
           'No events recorded',
@@ -295,9 +302,9 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-      itemCount: events.length,
+      itemCount: _memoizedEvents.length,
       itemBuilder: (context, index) {
-        final event = events[index];
+        final event = _memoizedEvents[index];
         final bool isHome = event['team'] == 'home';
 
         return IntrinsicHeight(
@@ -327,7 +334,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                     ),
                   ),
                   Expanded(
-                    child: index == events.length - 1
+                    child: index == _memoizedEvents.length - 1
                         ? const SizedBox()
                         : VerticalDivider(
                             width: 2,
@@ -384,6 +391,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
           const SizedBox(height: 4),
           Text(
             "${event['player']} ${event['detail']}",
+            textAlign: isHome ? TextAlign.right : TextAlign.left,
             style: TextStyle(
               color: Colors.grey[300],
               fontSize: 13,
@@ -429,7 +437,6 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
   }
 
   Widget _buildStatsTab() {
-    // Stats are not yet available from the backend
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -452,7 +459,6 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
             ?.where((l) => l.teamId == match.teamAId && l.isStarting)
             .toList() ??
         [];
-
     final awayLineup =
         match.lineups
             ?.where((l) => l.teamId == match.teamBId && l.isStarting)
