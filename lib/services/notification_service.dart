@@ -8,16 +8,41 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  bool _isInitialized = false;
 
   static final StreamController<String?> selectNotificationStream =
       StreamController<String?>.broadcast();
 
   Future<void> init() async {
-    // Android initialization settings
+    if (_isInitialized) return;
+
+    // Retry initialization to handle cases where the Android
+    // Activity context is not yet available (NullPointerException).
+    const maxRetries = 3;
+    for (var attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await _initNotifications();
+        _isInitialized = true;
+        return;
+      } catch (e) {
+        if (attempt < maxRetries - 1) {
+          // Wait before retrying - the context should be ready soon.
+          await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+        } else {
+          // All retries exhausted; log and continue without crashing.
+          // ignore: avoid_print
+          print(
+            'NotificationService: init failed after $maxRetries attempts: $e',
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _initNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS initialization settings (basic)
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
           requestAlertPermission: true,

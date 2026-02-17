@@ -200,20 +200,26 @@ class MatchCard extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.05),
         shape: BoxShape.circle,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: fullUrl.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: fullUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2),
+      child: fullUrl.isNotEmpty
+          ? CachedNetworkImage(
+              imageUrl: fullUrl,
+              memCacheHeight: 100, // Optimize memory usage
+              imageBuilder: (context, imageProvider) => Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                errorWidget: (context, error, stackTrace) =>
-                    _buildLogoPlaceholder(name),
-              )
-            : _buildLogoPlaceholder(name),
-      ),
+              ),
+              placeholder: (context, url) => const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              errorWidget: (context, error, stackTrace) =>
+                  _buildLogoPlaceholder(name),
+            )
+          : _buildLogoPlaceholder(name),
     );
   }
 

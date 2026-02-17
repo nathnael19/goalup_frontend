@@ -15,6 +15,15 @@ class StandingsScreen extends StatefulWidget {
 }
 
 class _StandingsScreenState extends State<StandingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<StandingsCubit>();
+    if (cubit.state is StandingsInitial) {
+      cubit.fetchStandings();
+    }
+  }
+
   Future<void> _handleRefresh() async {
     await context.read<StandingsCubit>().fetchStandings();
   }

@@ -202,18 +202,19 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   Widget _buildTeamLogo(ColorScheme colorScheme) {
     final logoUrl = ApiService.getImageFullUrl(_detailedTeam.logoUrl);
     if (logoUrl.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(50),
-        child: CachedNetworkImage(
-          imageUrl: logoUrl,
-          width: 100,
-          height: 100,
-          fit: BoxFit.cover,
-          placeholder: (context, url) =>
-              const CircularProgressIndicator(strokeWidth: 2),
-          errorWidget: (context, error, stackTrace) =>
-              _buildLogoPlaceholder(colorScheme),
+      return CachedNetworkImage(
+        imageUrl: logoUrl,
+        memCacheHeight: 100, // Optimize memory usage
+        imageBuilder: (context, imageProvider) => Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+          ),
         ),
+        placeholder: (context, url) =>
+            const CircularProgressIndicator(strokeWidth: 2),
+        errorWidget: (context, error, stackTrace) =>
+            _buildLogoPlaceholder(colorScheme),
       );
     }
     return _buildLogoPlaceholder(colorScheme);

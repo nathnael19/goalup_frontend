@@ -34,6 +34,8 @@ class NotificationCubit extends Cubit<NotificationState> {
 
   void startPolling() {
     _pollingTimer?.cancel();
+    // Fetch immediately so data is available right away
+    _fetchNotificationsSilently();
     _pollingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       _fetchNotificationsSilently();
     });

@@ -37,40 +37,61 @@ class NewsCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image Section
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: imageUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: imageUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      memCacheWidth: 800, // Optimize memory for card width
+                      imageBuilder: (context, imageProvider) => Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          image: DecorationImage(
+                            image: imageProvider,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      placeholder: (context, url) => Container(
+                        decoration: BoxDecoration(
                           color: Colors.grey[900],
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.red,
-                              ),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.red,
                             ),
                           ),
                         ),
-                        errorWidget: (context, url, error) => Container(
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        decoration: BoxDecoration(
                           color: Colors.grey[900],
-                          child: const Icon(
-                            Icons.image_not_supported,
-                            color: Colors.grey,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
                           ),
                         ),
-                      )
-                    : Container(
-                        color: Colors.grey[900],
-                        child: const Icon(Icons.image, color: Colors.grey),
+                        child: const Icon(
+                          Icons.image_not_supported,
+                          color: Colors.grey,
+                        ),
                       ),
-              ),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                      ),
+                      child: const Icon(Icons.image, color: Colors.grey),
+                    ),
             ),
 
             Padding(

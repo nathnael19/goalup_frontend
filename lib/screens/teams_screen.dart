@@ -18,6 +18,15 @@ class _TeamsScreenState extends State<TeamsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<TeamsCubit>();
+    if (cubit.state is TeamsInitial) {
+      cubit.fetchTeams();
+    }
+  }
+
   List<model.Team> _getFilteredTeams(List<model.Team> allTeams) {
     if (_searchQuery.isEmpty) return allTeams;
     return allTeams.where((team) {
@@ -134,20 +143,26 @@ class _TeamsScreenState extends State<TeamsScreen> {
                 color: colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: logoUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: logoUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
+              child: logoUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: logoUrl,
+                      memCacheHeight: 100, // Optimize memory usage
+                      imageBuilder: (context, imageProvider) => Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: imageProvider,
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        errorWidget: (context, error, stackTrace) =>
-                            _buildLogoPlaceholder(team, colorScheme),
-                      )
-                    : _buildLogoPlaceholder(team, colorScheme),
-              ),
+                      ),
+                      placeholder: (context, url) => const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      errorWidget: (context, error, stackTrace) =>
+                          _buildLogoPlaceholder(team, colorScheme),
+                    )
+                  : _buildLogoPlaceholder(team, colorScheme),
             ),
             const SizedBox(height: 16),
             Text(

@@ -11,12 +11,11 @@ import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'screens/home_screen.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   final apiService = ApiService();
   final notificationService = NotificationService();
-  await notificationService.init();
 
   runApp(
     RepositoryProvider.value(
@@ -26,30 +25,40 @@ void main() async {
           BlocProvider(
             create: (context) => MatchCubit(apiService)..fetchMatches(),
           ),
-          BlocProvider(
-            create: (context) => StandingsCubit(apiService)..fetchStandings(),
-          ),
-          BlocProvider(
-            create: (context) => TeamsCubit(apiService)..fetchTeams(),
-          ),
+          BlocProvider(create: (context) => StandingsCubit(apiService)),
+          BlocProvider(create: (context) => TeamsCubit(apiService)),
           BlocProvider(create: (context) => NewsCubit(apiService)..fetchNews()),
           BlocProvider(create: (context) => NavigationCubit()),
           BlocProvider(
             create: (context) =>
-                NotificationCubit(apiService, notificationService)
-                  ..fetchNotifications(),
+                NotificationCubit(apiService, notificationService),
           ),
           BlocProvider(create: (context) => PlayerStatsCubit(apiService)),
         ],
-        child: const GoalUpApp(),
+        child: GoalUpApp(notificationService: notificationService),
       ),
     ),
   );
 }
 
 /// Main application widget for GoalUp - ASTU Football App
-class GoalUpApp extends StatelessWidget {
-  const GoalUpApp({super.key});
+class GoalUpApp extends StatefulWidget {
+  const GoalUpApp({super.key, required this.notificationService});
+
+  final NotificationService notificationService;
+
+  @override
+  State<GoalUpApp> createState() => _GoalUpAppState();
+}
+
+class _GoalUpAppState extends State<GoalUpApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.notificationService.init();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

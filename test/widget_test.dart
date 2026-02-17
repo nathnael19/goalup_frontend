@@ -8,11 +8,14 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:goalup/main.dart';
+import 'package:goalup/services/notification_service.dart';
 
 void main() {
   testWidgets('GoalUp app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const GoalUpApp());
+    await tester.pumpWidget(
+      GoalUpApp(notificationService: NotificationService()),
+    );
 
     // Verify that the app title is displayed
     expect(find.text('GoalUp'), findsOneWidget);
