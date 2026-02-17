@@ -1,0 +1,6 @@
+﻿Analyzing goalup...                                             
+
+  error - Target of URI doesn't exist: '../cubits/team_stats_cubit.dart' - lib\screens\tournament_screen.dart:5:8 - uri_does_not_exist
+  error - The name 'PlayerStatsCubit' isn't a type, so it can't be used as a type argument - lib\screens\tournament_screen.dart:36:18 - non_type_as_type_argument
+  error - The name 'TeamStatsCubit' isn't a type, so it can't be used as a type argument - lib\screens\tournament_screen.dart:37:18 - non_type_as_type_argument
+

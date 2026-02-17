@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../cubits/match_cubit.dart';
 import '../models/match.dart' as model;
-import '../services/api_service.dart';
 import '../widgets/match_card.dart';
 import 'match_detail_screen.dart';
-import 'tournament_screen.dart';
 import '../utils/responsive.dart';
+
+// Schedule Components
+import 'schedule/calendar_strip.dart';
+import 'schedule/league_section.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -21,34 +21,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
   final Set<String> _collapsedTournaments = {};
   bool _hideAll = false;
-  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        const itemWidth = 110.0;
-        final screenWidth = MediaQuery.of(context).size.width;
-        // Today is at index 7
-        final targetOffset =
-            (7 * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
-        _scrollController.animateTo(
-          targetOffset,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   Future<void> _handleRefresh() async {
@@ -71,7 +49,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   ) {
     final Map<String, List<model.Match>> grouped = {};
     for (var match in filteredMatches) {
-      // Group by competition name instead of tournament name
       final competitionName =
           match.tournament?.competition?.name ??
           match.tournament?.name ??
@@ -111,7 +88,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       builder: (context, state) {
         return Column(
           children: [
-            _buildDateSelector(),
+            CalendarStrip(
+              selectedDate: _selectedDate,
+              onDateSelected: (date) {
+                setState(() => _selectedDate = date);
+              },
+            ),
             if (state is MatchLoading)
               const Expanded(child: Center(child: CircularProgressIndicator()))
             else if (state is MatchLoaded)
@@ -126,94 +108,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 
-  Widget _buildDateSelector() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    return Container(
-      height: 80.h,
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: ListView.builder(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        itemCount: 15,
-        itemBuilder: (context, index) {
-          final date = today.add(Duration(days: index - 7));
-          final isSelected = date.isAtSameMomentAs(_selectedDate);
-          final isToday = date.isAtSameMomentAs(today);
-
-          String label;
-          if (isToday) {
-            label = 'Today';
-          } else if (date.isAtSameMomentAs(
-            today.subtract(const Duration(days: 1)),
-          )) {
-            label = 'Yesterday';
-          } else if (date.isAtSameMomentAs(
-            today.add(const Duration(days: 1)),
-          )) {
-            label = 'Tomorrow';
-          } else {
-            label = DateFormat('EEE d MMM').format(date);
-          }
-
-          return GestureDetector(
-            onTap: () => setState(() => _selectedDate = date),
-            child: Container(
-              width: 110.w,
-              padding: EdgeInsets.symmetric(vertical: 8.h),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isSelected ? Colors.green : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : isToday
-                          ? Colors.green[300]
-                          : Colors.grey[500],
-                      fontWeight: isSelected || isToday
-                          ? FontWeight.bold
-                          : FontWeight.w500,
-                      fontSize: 14.sp,
-                    ),
-                  ),
-                  if (isToday && !isSelected)
-                    Positioned(
-                      top: 4,
-                      right: 12,
-                      child: Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Widget _buildLeagueList(List<model.Match> allMatches) {
     final filteredMatches = _getFilteredMatches(allMatches);
     final groupedMatches = _getGroupedMatches(filteredMatches);
-
     final liveMatches = context.read<MatchCubit>().getLiveMatches(allMatches);
 
     if (filteredMatches.isEmpty && liveMatches.isEmpty) {
@@ -231,7 +128,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               SizedBox(height: 24.h),
               if (filteredMatches.isNotEmpty)
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.0.w),
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
                   child: Text(
                     "SCHEDULED",
                     style: TextStyle(
@@ -246,13 +143,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             ],
 
             ...groupedMatches.entries.map((entry) {
-              return _buildLeagueSection(entry.key, entry.value);
+              return LeagueSection(
+                name: entry.key,
+                matches: entry.value,
+                isCollapsed: _collapsedTournaments.contains(entry.key),
+                onToggle: () => _toggleTournament(entry.key),
+              );
             }),
 
             if (filteredMatches.isEmpty && liveMatches.isNotEmpty)
-              const Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Center(
+              Padding(
+                padding: EdgeInsets.all(32.w),
+                child: const Center(
                   child: Text(
                     "No scheduled matches for this date",
                     style: TextStyle(color: Colors.grey),
@@ -324,214 +226,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 
-  Widget _buildLeagueSection(String name, List<model.Match> matches) {
-    final isCollapsed = _collapsedTournaments.contains(name);
-    final String? competitionId = matches.isNotEmpty
-        ? matches.first.tournament?.competition?.id
-        : null;
-
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    TournamentScreen(competitionId: competitionId),
-              ),
-            );
-          },
-          child: _buildCollapseHeader(
-            name,
-            matches.length.toString(),
-            isCollapsed,
-            leading: _buildFlagPlaceholder(),
-            onToggle: () => _toggleTournament(name),
-          ),
-        ),
-        if (!isCollapsed) ...matches.map((match) => _buildMatchItem(match)),
-        SizedBox(height: 12.h),
-      ],
-    );
-  }
-
-  Widget _buildCollapseHeader(
-    String title,
-    String count,
-    bool isCollapsed, {
-    Widget? leading,
-    VoidCallback? onToggle,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12.w),
-      ),
-      child: Row(
-        children: [
-          if (leading != null) ...[leading, const SizedBox(width: 12)],
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 15.sp,
-              ),
-            ),
-          ),
-          if (count.isNotEmpty)
-            Text(
-              count,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onToggle,
-            child: Icon(
-              isCollapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-              color: Colors.grey,
-              size: 20,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMatchItem(model.Match match) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MatchDetailScreen(match: match),
-          ),
-        );
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.white10, width: 0.5)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                match.teamA?.name ?? '',
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            _buildTeamLogo(match.teamA?.logoUrl, match.teamA?.name ?? 'A'),
-            const SizedBox(width: 12),
-            Column(
-              children: [
-                Text(
-                  match.status == model.MatchStatus.finished
-                      ? '${match.scoreA} - ${match.scoreB}'
-                      : DateFormat('HH:mm').format(match.startTime),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15.sp,
-                  ),
-                ),
-                if (match.status == model.MatchStatus.live)
-                  Text(
-                    'LIVE',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            _buildTeamLogo(match.teamB?.logoUrl, match.teamB?.name ?? 'B'),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                match.teamB?.name ?? '',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTeamLogo(String? logoUrl, String name) {
-    final fullLogoUrl = ApiService.getImageFullUrl(logoUrl);
-
-    return Container(
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        color: Colors.grey[800],
-        shape: BoxShape.circle,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: fullLogoUrl.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: fullLogoUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(strokeWidth: 1),
-                ),
-                errorWidget: (context, error, stackTrace) =>
-                    _buildLogoPlaceholder(name),
-              )
-            : _buildLogoPlaceholder(name),
-      ),
-    );
-  }
-
-  Widget _buildLogoPlaceholder(String name) {
-    return Center(
-      child: Text(
-        name.isNotEmpty ? name[0] : '?',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFlagPlaceholder() {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: const BoxDecoration(
-        color: Colors.grey,
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-
   Widget _buildHideAllToggle(Map<String, List<model.Match>> grouped) {
     return Center(
       child: ActionChip(
         onPressed: () => _toggleHideAll(grouped),
         backgroundColor: const Color(0xFF1E1E1E),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        labelPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.w),
+        ),
         label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -542,11 +245,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
             Icon(
               _hideAll ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
               color: Colors.white,
-              size: 20,
+              size: 20.sp,
             ),
           ],
         ),
@@ -559,13 +262,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.event_busy_outlined, size: 80, color: Colors.grey[800]),
-          const SizedBox(height: 16),
-          const Text(
+          Icon(Icons.event_busy_outlined, size: 80.sp, color: Colors.grey[800]),
+          SizedBox(height: 16.h),
+          Text(
             'NO MATCHES FOUND FOR THIS DATE',
             style: TextStyle(
               fontWeight: FontWeight.w900,
-              fontSize: 11,
+              fontSize: 11.sp,
               letterSpacing: 1,
               color: Colors.grey,
             ),

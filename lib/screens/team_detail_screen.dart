@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../models/team.dart' as model;
-import '../models/player.dart';
 import '../services/api_service.dart';
-import '../widgets/match_card.dart';
 import '../utils/responsive.dart';
+
+// Team Detail Components
+import 'team_detail/team_header.dart';
+import 'team_detail/roster_tab.dart';
+import 'team_detail/stats_tab.dart';
+import 'team_detail/matches_tab.dart';
 
 /// Detailed view for a specific team
 class TeamDetailScreen extends StatefulWidget {
@@ -59,8 +62,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -78,90 +79,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
           ? Center(child: Text(_error!))
           : Column(
               children: [
-                // Premium Team Header
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(
-                    vertical: 32.h,
-                    horizontal: 20.w,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainer,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(40.w),
-                      bottomRight: Radius.circular(40.w),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 100.w,
-                        height: 100.w,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(alpha: 0.2),
-                            width: 4.w,
-                          ),
-                        ),
-                        child: Center(child: _buildTeamLogo(colorScheme)),
-                      ),
-                      SizedBox(height: 20.h),
-                      Text(
-                        _detailedTeam.name,
-                        style: TextStyle(
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      if (_detailedTeam.stadium != null) ...[
-                        Text(
-                          _detailedTeam.stadium!.toUpperCase(),
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                      ],
-                      if (_detailedTeam.tournament != null)
-                        Text(
-                          _detailedTeam.tournament!.name.toUpperCase(),
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10.sp,
-                            letterSpacing: 1,
-                          ),
-                        )
-                      else
-                        Text(
-                          (_detailedTeam.batch ?? 'N/A').toUpperCase(),
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildQuickStat('RANK', _getRank()),
-                          _buildDivider(),
-                          _buildQuickStat('POINTS', _getPoints()),
-                          _buildDivider(),
-                          _buildQuickStat('PLAYED', _getPlayed()),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                TeamHeader(team: _detailedTeam),
 
                 // Tabs
                 TabBar(
@@ -189,317 +107,18 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildRosterTab(),
-                      _buildStatsTab(),
-                      _buildMatchesTab(),
+                      RosterTab(roster: _detailedTeam.roster),
+                      StatsTab(
+                        teamId: _detailedTeam.id,
+                        standings: _detailedTeam.standings,
+                        matches: _detailedTeam.matches,
+                      ),
+                      MatchesTab(matches: _detailedTeam.matches),
                     ],
                   ),
                 ),
               ],
             ),
     );
-  }
-
-  Widget _buildTeamLogo(ColorScheme colorScheme) {
-    final logoUrl = ApiService.getImageFullUrl(_detailedTeam.logoUrl);
-    if (logoUrl.isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: logoUrl,
-        memCacheHeight: 100, // Optimize memory usage
-        imageBuilder: (context, imageProvider) => Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
-          ),
-        ),
-        placeholder: (context, url) =>
-            const CircularProgressIndicator(strokeWidth: 2),
-        errorWidget: (context, error, stackTrace) =>
-            _buildLogoPlaceholder(colorScheme),
-      );
-    }
-    return _buildLogoPlaceholder(colorScheme);
-  }
-
-  Widget _buildLogoPlaceholder(ColorScheme colorScheme) {
-    return Text(
-      _detailedTeam.name.isNotEmpty ? _detailedTeam.name[0] : 'T',
-      style: TextStyle(
-        color: colorScheme.primary,
-        fontSize: 48.sp,
-        fontWeight: FontWeight.w900,
-      ),
-    );
-  }
-
-  Widget _buildQuickStat(String label, String value, {bool isForm = false}) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 9.sp,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1,
-          ),
-        ),
-        SizedBox(height: 6.h),
-        if (isForm)
-          Row(children: value.split(' ').map((v) => _buildFormDot(v)).toList())
-        else
-          Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16.sp),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildFormDot(String result) {
-    Color color = Colors.grey;
-    if (result == 'W') color = Colors.greenAccent;
-    if (result == 'L') color = Colors.redAccent;
-    if (result == 'D') color = Colors.amberAccent;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      width: 12.w,
-      height: 12.w,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      child: Center(
-        child: Text(
-          result,
-          style: const TextStyle(
-            fontSize: 7,
-            fontWeight: FontWeight.w900,
-            color: Colors.black,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Container(
-      height: 24.h,
-      width: 1.w,
-      margin: EdgeInsets.symmetric(horizontal: 24.w),
-      color: Colors.white.withValues(alpha: 0.05),
-    );
-  }
-
-  Widget _buildRosterTab() {
-    final roster = _detailedTeam.roster;
-    if (roster == null || roster.isEmpty) {
-      return const Center(child: Text('No roster information available'));
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        if (roster['goalkeepers']?.isNotEmpty ?? false)
-          ..._buildPositionSection('GOALKEEPERS', roster['goalkeepers']!),
-        if (roster['defenders']?.isNotEmpty ?? false)
-          ..._buildPositionSection('DEFENDERS', roster['defenders']!),
-        if (roster['midfielders']?.isNotEmpty ?? false)
-          ..._buildPositionSection('MIDFIELDERS', roster['midfielders']!),
-        if (roster['forwards']?.isNotEmpty ?? false)
-          ..._buildPositionSection('FORWARDS', roster['forwards']!),
-      ],
-    );
-  }
-
-  List<Widget> _buildPositionSection(String title, List<Player> players) {
-    return [
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 11.sp,
-            fontWeight: FontWeight.w900,
-            color: Colors.grey[500],
-            letterSpacing: 1.5,
-          ),
-        ),
-      ),
-      ...players.map((p) => _buildPlayerTile(p)),
-    ];
-  }
-
-  Widget _buildPlayerTile(Player player) {
-    return ListTile(
-      contentPadding: EdgeInsets.symmetric(vertical: 4.h),
-      leading: CircleAvatar(
-        backgroundColor: Colors.white.withValues(alpha: 0.05),
-        child: Text(
-          player.jerseyNumber.toString(),
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp),
-        ),
-      ),
-      title: Text(
-        player.name,
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
-      ),
-      subtitle: Text(
-        player.position.toUpperCase(),
-        style: TextStyle(color: Colors.grey[600], fontSize: 11.sp),
-      ),
-      trailing: Text(
-        player.goals > 0 ? '${player.goals} G' : '',
-        style: TextStyle(
-          fontWeight: FontWeight.w900,
-          color: Colors.greenAccent,
-          fontSize: 12.sp,
-        ),
-      ),
-    );
-  }
-
-  String _getRank() {
-    if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
-      return '-';
-    }
-    return 'N/A';
-  }
-
-  String _getPoints() {
-    if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
-      return '0';
-    }
-    return _detailedTeam.standings!.first.points.toString();
-  }
-
-  String _getPlayed() {
-    if (_detailedTeam.standings == null || _detailedTeam.standings!.isEmpty) {
-      return '0';
-    }
-    return _detailedTeam.standings!.first.played.toString();
-  }
-
-  Widget _buildStatsTab() {
-    final standing = _detailedTeam.standings?.isNotEmpty == true
-        ? _detailedTeam.standings!.first
-        : null;
-
-    if (standing == null) {
-      return const Center(child: Text('No stats available'));
-    }
-
-    final int played = standing.played;
-    final int goalsFor = standing.goalsFor;
-    final int goalsAgainst = standing.goalsAgainst;
-
-    // Calculate clean sheets from matches
-    int cleanSheets = 0;
-    if (_detailedTeam.matches != null) {
-      for (var m in _detailedTeam.matches!) {
-        // Only count finished matches
-        if (m.status.name == 'finished') {
-          if (m.teamAId == _detailedTeam.id && m.scoreB == 0) {
-            cleanSheets++;
-          } else if (m.teamBId == _detailedTeam.id && m.scoreA == 0) {
-            cleanSheets++;
-          }
-        }
-      }
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        _buildStatRow(
-          'GOALS SCORED',
-          goalsFor.toString(),
-          played > 0 ? (goalsFor / (played * 3)).clamp(0, 1) : 0,
-        ),
-        _buildStatRow(
-          'GOALS CONCEDED',
-          goalsAgainst.toString(),
-          played > 0 ? (goalsAgainst / (played * 3)).clamp(0, 1) : 0,
-        ),
-        _buildStatRow(
-          'CLEAN SHEETS',
-          cleanSheets.toString(),
-          played > 0 ? (cleanSheets / played).clamp(0, 1) : 0,
-        ),
-        _buildStatRow(
-          'WINS',
-          standing.won.toString(),
-          played > 0 ? (standing.won / played).clamp(0, 1) : 0,
-        ),
-        _buildStatRow(
-          'DRAWS',
-          standing.drawn.toString(),
-          played > 0 ? (standing.drawn / played).clamp(0, 1) : 0,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatRow(String label, String value, double progress) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1,
-                ),
-              ),
-              Text(
-                value,
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16.sp),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
-              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-              minHeight: 6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMatchesTab() {
-    if (_detailedTeam.matches != null && _detailedTeam.matches!.isNotEmpty) {
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _detailedTeam.matches!.length,
-        itemBuilder: (context, index) {
-          final match = _detailedTeam.matches![index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: MatchCard(match: match),
-          );
-        },
-      );
-    } else {
-      return Center(
-        child: Text(
-          'No matches found',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-    }
   }
 }
