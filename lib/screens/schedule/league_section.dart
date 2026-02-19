@@ -27,6 +27,10 @@ class LeagueSection extends StatelessWidget {
         ? matches.first.tournament?.competition?.id
         : null;
 
+    final String? tournamentId = matches.isNotEmpty
+        ? matches.first.tournament?.id
+        : null;
+
     return Column(
       children: [
         GestureDetector(
@@ -34,8 +38,10 @@ class LeagueSection extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    TournamentScreen(competitionId: competitionId),
+                builder: (context) => TournamentScreen(
+                  competitionId: competitionId,
+                  tournamentId: tournamentId,
+                ),
               ),
             );
           },

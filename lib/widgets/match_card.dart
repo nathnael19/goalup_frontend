@@ -43,6 +43,7 @@ class MatchCard extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (context) => TournamentScreen(
                             competitionId: match.tournament!.competition!.id,
+                            tournamentId: match.tournament!.id,
                           ),
                         ),
                       );

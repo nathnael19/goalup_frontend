@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/match.dart';
 import '../models/team.dart';
+import '../models/tournament.dart';
 
 import 'cache_service.dart';
 
@@ -15,8 +16,8 @@ class ApiService {
     }
     if (defaultTargetPlatform == TargetPlatform.android) {
       // 10.0.2.2 is the special IP for Android Emulator to access host machine
-      // return 'http://10.0.2.2:8000/api/v1';
-      return 'https://goalupbackend.webcode.codes/api/v1'; // Use production for web profile
+      return 'http://10.0.2.2:8000/api/v1';
+      // return 'https://goalupbackend.webcode.codes/api/v1'; // Use production for web profile
     }
     return 'https://goalupbackend.webcode.codes/api/v1';
   }
@@ -48,6 +49,36 @@ class ApiService {
       if (stale != null) return stale;
       rethrow;
     }
+  }
+
+  // --- Tournaments ---
+  Future<Tournament> getTournament(
+    String id, {
+    bool forceRefresh = false,
+  }) async {
+    final data = await _getWithCache(
+      '/tournaments/$id',
+      forceRefresh: forceRefresh,
+      ttl: const Duration(hours: 1),
+    );
+    return Tournament.fromJson(data);
+  }
+
+  Future<List<Tournament>> getCompetitionSeasons(
+    String competitionId, {
+    bool forceRefresh = false,
+  }) async {
+    final data = await _getWithCache(
+      '/tournaments/',
+      forceRefresh: forceRefresh,
+      ttl: const Duration(hours: 1),
+    );
+    final allTournaments = (data as List)
+        .map((json) => Tournament.fromJson(json))
+        .toList();
+    return allTournaments
+        .where((t) => t.competitionId == competitionId)
+        .toList();
   }
 
   // --- Matches ---
@@ -175,6 +206,7 @@ class ApiService {
     if (path == null || path.isEmpty) return '';
     if (path.startsWith('http')) return path;
     final serverRoot = baseUrl.replaceAll('/api/v1', '');
-    return '$serverRoot$path';
+    final cleanPath = path.startsWith('/') ? path : '/$path';
+    return '$serverRoot$cleanPath';
   }
 }

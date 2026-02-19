@@ -35,6 +35,7 @@ class Tournament {
   final String name;
   final int year;
   final String type;
+  final String? competitionId;
   final Competition? competition;
 
   Tournament({
@@ -42,6 +43,7 @@ class Tournament {
     required this.name,
     required this.year,
     required this.type,
+    this.competitionId,
     this.competition,
   });
 
@@ -51,6 +53,7 @@ class Tournament {
       name: json['name'],
       year: json['year'],
       type: json['type'],
+      competitionId: json['competition_id'],
       competition: json['competition'] != null
           ? Competition.fromJson(json['competition'])
           : null,
