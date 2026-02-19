@@ -40,13 +40,40 @@ class TournamentCubit extends Cubit<TournamentState> {
     : _apiService = apiService ?? ApiService(),
       super(TournamentInitial());
 
-  Future<void> fetchTournament(String? id) async {
+  Future<void> fetchTournament(String? id, {bool forceRefresh = false}) async {
     if (id == null) return;
     try {
-      emit(TournamentLoading());
+      // 1. Try to load from cache first for instant UI
+      if (!forceRefresh) {
+        final cachedTournamentData = await _apiService.getCached(
+          '/tournaments/$id',
+        );
+        final cachedSeasonsData = await _apiService.getCached('/tournaments/');
+
+        if (cachedTournamentData != null) {
+          final tournament = Tournament.fromJson(cachedTournamentData);
+          List<Tournament> seasons = [];
+
+          if (cachedSeasonsData != null) {
+            seasons = (cachedSeasonsData as List)
+                .map((json) => Tournament.fromJson(json))
+                .where((t) => t.competitionId == tournament.competitionId)
+                .toList();
+            seasons.sort((a, b) => b.year.compareTo(a.year));
+          }
+
+          emit(TournamentLoaded(tournament, seasons: seasons));
+        } else {
+          emit(TournamentLoading());
+        }
+      } else {
+        emit(TournamentLoading());
+      }
+
+      // 2. Fetch fresh data from network
       final tournament = await _apiService.getTournament(
         id,
-        forceRefresh: true,
+        forceRefresh: forceRefresh,
       );
 
       // Fetch all seasons for this competition
@@ -54,6 +81,7 @@ class TournamentCubit extends Cubit<TournamentState> {
       if (tournament.competitionId != null) {
         seasons = await _apiService.getCompetitionSeasons(
           tournament.competitionId!,
+          forceRefresh: forceRefresh,
         );
         // Sort by year descending
         seasons.sort((a, b) => b.year.compareTo(a.year));
@@ -61,7 +89,9 @@ class TournamentCubit extends Cubit<TournamentState> {
 
       emit(TournamentLoaded(tournament, seasons: seasons));
     } catch (e) {
-      emit(TournamentError(e.toString()));
+      if (state is! TournamentLoaded) {
+        emit(TournamentError(e.toString()));
+      }
     }
   }
 }

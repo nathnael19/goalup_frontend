@@ -23,13 +23,30 @@ class TeamsCubit extends Cubit<TeamsState> {
 
   TeamsCubit(this.apiService) : super(TeamsInitial());
 
-  Future<void> fetchTeams() async {
+  Future<void> fetchTeams({bool forceRefresh = false}) async {
     try {
-      emit(TeamsLoading());
-      final teams = await apiService.getTeams();
+      // 1. Try to load from cache first for instant UI
+      if (!forceRefresh) {
+        final cachedData = await apiService.getCached('/teams/');
+        if (cachedData != null) {
+          final cachedTeams = (cachedData as List)
+              .map((json) => Team.fromJson(json))
+              .toList();
+          emit(TeamsLoaded(cachedTeams));
+        } else {
+          emit(TeamsLoading());
+        }
+      } else {
+        emit(TeamsLoading());
+      }
+
+      // 2. Fetch fresh data from network
+      final teams = await apiService.getTeams(forceRefresh: forceRefresh);
       emit(TeamsLoaded(teams));
     } catch (e) {
-      emit(TeamsError(e.toString()));
+      if (state is! TeamsLoaded) {
+        emit(TeamsError(e.toString()));
+      }
     }
   }
 }

@@ -37,7 +37,7 @@ class MatchCard extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () {
-                    if (match.tournament?.competition != null) {
+                    if (match.tournament?.competition!.name != null) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(

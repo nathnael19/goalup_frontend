@@ -51,6 +51,13 @@ class ApiService {
     }
   }
 
+  /// Retrieves data from cache without performing a network request.
+  /// Useful for "instant-load" UI patterns.
+  Future<dynamic> getCached(String endpoint) async {
+    final url = '$baseUrl$endpoint';
+    return await _cacheService.getStale(url);
+  }
+
   // --- Tournaments ---
   Future<Tournament> getTournament(
     String id, {

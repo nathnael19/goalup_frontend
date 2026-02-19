@@ -35,7 +35,7 @@ class NotificationCubit extends Cubit<NotificationState> {
   void startPolling() {
     _pollingTimer?.cancel();
     // Fetch immediately so data is available right away
-    _fetchNotificationsSilently();
+    _fetchNotificationsSilently(showCache: true);
     _pollingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       _fetchNotificationsSilently();
     });
@@ -45,8 +45,18 @@ class NotificationCubit extends Cubit<NotificationState> {
     _pollingTimer?.cancel();
   }
 
-  Future<void> _fetchNotificationsSilently() async {
+  Future<void> _fetchNotificationsSilently({bool showCache = false}) async {
     try {
+      if (showCache) {
+        final cachedData = await _apiService.getCached('/notifications/');
+        if (cachedData != null) {
+          final List<Notification> cachedNotifications = (cachedData as List)
+              .map((json) => Notification.fromJson(json))
+              .toList();
+          emit(NotificationLoaded(cachedNotifications));
+        }
+      }
+
       final List<dynamic> jsonList = await _apiService.getNotifications();
       final List<Notification> notifications = jsonList
           .map((json) => Notification.fromJson(json))
@@ -73,10 +83,25 @@ class NotificationCubit extends Cubit<NotificationState> {
     }
   }
 
-  Future<void> fetchNotifications() async {
-    emit(NotificationLoading());
+  Future<void> fetchNotifications({bool forceRefresh = false}) async {
     try {
-      final List<dynamic> jsonList = await _apiService.getNotifications();
+      if (!forceRefresh) {
+        final cachedData = await _apiService.getCached('/notifications/');
+        if (cachedData != null) {
+          final List<Notification> cachedNotifications = (cachedData as List)
+              .map((json) => Notification.fromJson(json))
+              .toList();
+          emit(NotificationLoaded(cachedNotifications));
+        } else {
+          emit(NotificationLoading());
+        }
+      } else {
+        emit(NotificationLoading());
+      }
+
+      final List<dynamic> jsonList = await _apiService.getNotifications(
+        forceRefresh: forceRefresh,
+      );
       final List<Notification> notifications = jsonList
           .map((json) => Notification.fromJson(json))
           .toList();
@@ -88,7 +113,9 @@ class NotificationCubit extends Cubit<NotificationState> {
 
       emit(NotificationLoaded(notifications));
     } catch (e) {
-      emit(NotificationError(e.toString()));
+      if (state is! NotificationLoaded) {
+        emit(NotificationError(e.toString()));
+      }
     }
   }
 

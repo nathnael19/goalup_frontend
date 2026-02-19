@@ -8,7 +8,7 @@ class StandingsInitial extends StandingsState {}
 class StandingsLoading extends StandingsState {}
 
 class StandingsLoaded extends StandingsState {
-  final List<dynamic> tournaments;
+  final List<Map<String, dynamic>> tournaments;
   StandingsLoaded(this.tournaments);
 }
 
@@ -22,13 +22,48 @@ class StandingsCubit extends Cubit<StandingsState> {
 
   StandingsCubit(this.apiService) : super(StandingsInitial());
 
-  Future<void> fetchStandings() async {
+  Future<void> fetchStandings({
+    String? tournamentId,
+    bool forceRefresh = false,
+  }) async {
     try {
-      emit(StandingsLoading());
-      final standings = await apiService.getStandings();
-      emit(StandingsLoaded(standings));
+      // 1. Try to load from cache first for instant UI
+      if (!forceRefresh) {
+        final endpoint = tournamentId != null
+            ? '/standings/$tournamentId'
+            : '/standings/';
+        final cachedData = await apiService.getCached(endpoint);
+
+        if (cachedData != null) {
+          if (tournamentId != null) {
+            emit(StandingsLoaded([cachedData as Map<String, dynamic>]));
+          } else {
+            emit(StandingsLoaded(List<Map<String, dynamic>>.from(cachedData)));
+          }
+        } else {
+          emit(StandingsLoading());
+        }
+      } else {
+        emit(StandingsLoading());
+      }
+
+      // 2. Fetch fresh data from network
+      if (tournamentId != null) {
+        final standings = await apiService.getTournamentStandings(
+          tournamentId,
+          forceRefresh: forceRefresh,
+        );
+        emit(StandingsLoaded([standings]));
+      } else {
+        final standingsArr = await apiService.getStandings(
+          forceRefresh: forceRefresh,
+        );
+        emit(StandingsLoaded(List<Map<String, dynamic>>.from(standingsArr)));
+      }
     } catch (e) {
-      emit(StandingsError(e.toString()));
+      if (state is! StandingsLoaded) {
+        emit(StandingsError(e.toString()));
+      }
     }
   }
 }

@@ -15,9 +15,13 @@ class TeamHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 20.w),
+      padding: EdgeInsets.only(
+        bottom: 20.h,
+        left: 15.w,
+        right: 15.w,
+        top: 10.h,
+      ),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(40.w),
           bottomRight: Radius.circular(40.w),
@@ -25,58 +29,47 @@ class TeamHeader extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 100.w,
-            height: 100.w,
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.2),
-                width: 4.w,
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(5.h),
+                width: 70.w,
+                height: 70.w,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(child: _buildTeamLogo(colorScheme)),
               ),
-            ),
-            child: Center(child: _buildTeamLogo(colorScheme)),
-          ),
-          SizedBox(height: 20.h),
-          Text(
-            team.name,
-            style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.w900),
+              SizedBox(width: 10.h),
+              Column(
+                crossAxisAlignment: .start,
+                children: [
+                  Text(
+                    team.name,
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+
+                  if (team.stadium != null) ...[
+                    Text(
+                      team.stadium!.toUpperCase(),
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12.sp,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 8),
-          if (team.stadium != null) ...[
-            Text(
-              team.stadium!.toUpperCase(),
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w900,
-                fontSize: 12.sp,
-                letterSpacing: 1,
-              ),
-            ),
-            const SizedBox(height: 4),
-          ],
-          if (team.tournament != null)
-            Text(
-              team.tournament!.name.toUpperCase(),
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontWeight: FontWeight.bold,
-                fontSize: 10.sp,
-                letterSpacing: 1,
-              ),
-            )
-          else
-            Text(
-              (team.batch ?? 'N/A').toUpperCase(),
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w900,
-                fontSize: 12.sp,
-                letterSpacing: 1,
-              ),
-            ),
-          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -101,7 +94,7 @@ class TeamHeader extends StatelessWidget {
         imageBuilder: (context, imageProvider) => Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+            image: DecorationImage(image: imageProvider, fit: BoxFit.contain),
           ),
         ),
         placeholder: (context, url) =>

@@ -23,13 +23,32 @@ class MatchCubit extends Cubit<MatchState> {
 
   MatchCubit(this.apiService) : super(MatchInitial());
 
-  Future<void> fetchMatches() async {
+  Future<void> fetchMatches({bool forceRefresh = false}) async {
     try {
-      emit(MatchLoading());
-      final matches = await apiService.getMatches();
+      // 1. Try to load from cache first for instant UI
+      if (!forceRefresh) {
+        final cachedData = await apiService.getCached('/matches/');
+        if (cachedData != null) {
+          final cachedMatches = (cachedData as List)
+              .map((json) => Match.fromJson(json))
+              .toList();
+          emit(MatchLoaded(cachedMatches));
+        } else {
+          emit(MatchLoading());
+        }
+      } else {
+        emit(MatchLoading());
+      }
+
+      // 2. Fetch fresh data from network
+      final matches = await apiService.getMatches(forceRefresh: forceRefresh);
       emit(MatchLoaded(matches));
     } catch (e) {
-      emit(MatchError(e.toString()));
+      // If we already emitted a cached Loaded state, we might not want to emit Error
+      // unless it's a critical failure and no data exists.
+      if (state is! MatchLoaded) {
+        emit(MatchError(e.toString()));
+      }
     }
   }
 
