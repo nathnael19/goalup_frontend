@@ -130,24 +130,58 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           }
         }
 
-        return Column(
-          children: [
-            CalendarStrip(
-              selectedDate: _selectedDate,
-              availableDates: availableDates,
-              onDateSelected: (date) {
-                setState(() => _selectedDate = date);
-              },
-            ),
-            if (state is MatchLoading)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
-            else if (state is MatchLoaded)
-              _buildLeagueList(state.matches)
-            else if (state is MatchError)
-              Expanded(child: Center(child: Text(state.message)))
-            else
-              const SizedBox(),
-          ],
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final bool isTodaySelected =
+            _selectedDate.year == today.year &&
+            _selectedDate.month == today.month &&
+            _selectedDate.day == today.day;
+
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Column(
+            children: [
+              CalendarStrip(
+                selectedDate: _selectedDate,
+                availableDates: availableDates,
+                onDateSelected: (date) {
+                  setState(() => _selectedDate = date);
+                },
+              ),
+              if (state is MatchLoading)
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (state is MatchLoaded)
+                _buildLeagueList(state.matches)
+              else if (state is MatchError)
+                Expanded(child: Center(child: Text(state.message)))
+              else
+                const SizedBox(),
+            ],
+          ),
+          floatingActionButton: (!isTodaySelected && availableDates.isNotEmpty)
+              ? FloatingActionButton.extended(
+                  onPressed: () {
+                    // Find today or the nearest date to today in availableDates
+                    DateTime targetDate = availableDates.first;
+                    for (var d in availableDates) {
+                      if (d.isAtSameMomentAs(today) || d.isAfter(today)) {
+                        targetDate = d;
+                        break;
+                      }
+                    }
+                    setState(() => _selectedDate = targetDate);
+                  },
+                  icon: const Icon(Icons.today, color: Colors.white),
+                  label: Text(
+                    availableDates.any((d) => d.isAtSameMomentAs(today))
+                        ? 'Today'
+                        : 'Nearest',
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                )
+              : null,
         );
       },
     );
