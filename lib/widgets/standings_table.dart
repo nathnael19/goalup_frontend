@@ -39,12 +39,13 @@ class StandingsTable extends StatelessWidget {
       );
     }
 
-    return SingleChildScrollView(
+    return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      child: Column(
-        children: [
+      itemCount: standings.length + 2, // +1 for header, +1 for legend
+      itemBuilder: (context, index) {
+        if (index == 0) {
           // Table header
-          Container(
+          return Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainer,
@@ -100,142 +101,12 @@ class StandingsTable extends StatelessWidget {
                 SizedBox(width: 4.w),
               ],
             ),
-          ),
-          // Table rows
-          ListView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: standings.length,
-            itemBuilder: (context, index) {
-              final standing = standings[index];
-              final goalDifference = standing.goalsFor - standing.goalsAgainst;
-              final rank = index + 1;
-              final isTopThree = rank <= 3;
-              final bool isLast = index == standings.length - 1;
+          );
+        }
 
-              return InkWell(
-                onTap: standing.team != null
-                    ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                TeamDetailScreen(team: standing.team!),
-                          ),
-                        );
-                      }
-                    : null,
-                borderRadius: isLast
-                    ? BorderRadius.only(
-                        bottomLeft: Radius.circular(16.w),
-                        bottomRight: Radius.circular(16.w),
-                      )
-                    : null,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainer.withValues(
-                      alpha: index % 2 == 0 ? 0.3 : 0.6,
-                    ),
-                    borderRadius: isLast
-                        ? BorderRadius.only(
-                            bottomLeft: Radius.circular(16.w),
-                            bottomRight: Radius.circular(16.w),
-                          )
-                        : null,
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 14.h,
-                  ),
-                  child: Row(
-                    children: [
-                      // Rank
-                      SizedBox(
-                        width: 32.w,
-                        child: Text(
-                          '$rank',
-                          style: TextStyle(
-                            fontWeight: isTopThree
-                                ? FontWeight.w900
-                                : FontWeight.bold,
-                            color: rank == 1
-                                ? Colors.amber
-                                : rank == 2
-                                ? Colors.grey[400]
-                                : rank == 3
-                                ? Colors.brown[300]
-                                : Colors.grey[500],
-                            fontSize: 13.sp,
-                          ),
-                        ),
-                      ),
-                      // Team Logo & Name
-                      Expanded(
-                        flex: 3,
-                        child: Row(
-                          children: [
-                            _buildTeamLogo(
-                              standing.team?.logoUrl,
-                              standing.team?.name ?? '?',
-                              colorScheme,
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Text(
-                                standing.team?.name ?? 'UNKNOWN',
-                                style: TextStyle(
-                                  fontWeight: isTopThree
-                                      ? FontWeight.w900
-                                      : FontWeight.bold,
-                                  fontSize: 13.sp,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Stats
-                      _buildStatCell('${standing.played}'),
-                      _buildStatCell('${standing.won}'),
-                      _buildStatCell('${standing.drawn}'),
-                      _buildStatCell('${standing.lost}'),
-                      _buildStatCell(
-                        goalDifference >= 0
-                            ? '+$goalDifference'
-                            : '$goalDifference',
-                        color: goalDifference > 0
-                            ? Colors.greenAccent
-                            : goalDifference < 0
-                            ? Colors.redAccent
-                            : Colors.grey[600],
-                      ),
-                      // Points
-                      SizedBox(
-                        width: 32.w,
-                        child: Text(
-                          '${standing.points}',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            color: isTopThree
-                                ? colorScheme.primary
-                                : Colors.white,
-                            fontSize: 13.sp,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+        if (index == standings.length + 1) {
           // Legend
-          Padding(
+          return Padding(
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,9 +148,128 @@ class StandingsTable extends StatelessWidget {
                 ),
               ],
             ),
+          );
+        }
+
+        final standingIndex = index - 1;
+        final standing = standings[standingIndex];
+        final goalDifference = standing.goalsFor - standing.goalsAgainst;
+        final rank = standingIndex + 1;
+        final isTopThree = rank <= 3;
+        final bool isLast = standingIndex == standings.length - 1;
+
+        return InkWell(
+          onTap: standing.team != null
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          TeamDetailScreen(team: standing.team!),
+                    ),
+                  );
+                }
+              : null,
+          borderRadius: isLast
+              ? BorderRadius.only(
+                  bottomLeft: Radius.circular(16.w),
+                  bottomRight: Radius.circular(16.w),
+                )
+              : null,
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainer.withValues(
+                alpha: standingIndex % 2 == 0 ? 0.3 : 0.6,
+              ),
+              borderRadius: isLast
+                  ? BorderRadius.only(
+                      bottomLeft: Radius.circular(16.w),
+                      bottomRight: Radius.circular(16.w),
+                    )
+                  : null,
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            child: Row(
+              children: [
+                // Rank
+                SizedBox(
+                  width: 32.w,
+                  child: Text(
+                    '$rank',
+                    style: TextStyle(
+                      fontWeight: isTopThree
+                          ? FontWeight.w900
+                          : FontWeight.bold,
+                      color: rank == 1
+                          ? Colors.amber
+                          : rank == 2
+                          ? Colors.grey[400]
+                          : rank == 3
+                          ? Colors.brown[300]
+                          : Colors.grey[500],
+                      fontSize: 13.sp,
+                    ),
+                  ),
+                ),
+                // Team Logo & Name
+                Expanded(
+                  flex: 3,
+                  child: Row(
+                    children: [
+                      _buildTeamLogo(
+                        standing.team?.logoUrl,
+                        standing.team?.name ?? '?',
+                        colorScheme,
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          standing.team?.name ?? 'UNKNOWN',
+                          style: TextStyle(
+                            fontWeight: isTopThree
+                                ? FontWeight.w900
+                                : FontWeight.bold,
+                            fontSize: 13.sp,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Stats
+                _buildStatCell('${standing.played}'),
+                _buildStatCell('${standing.won}'),
+                _buildStatCell('${standing.drawn}'),
+                _buildStatCell('${standing.lost}'),
+                _buildStatCell(
+                  goalDifference >= 0 ? '+$goalDifference' : '$goalDifference',
+                  color: goalDifference > 0
+                      ? Colors.greenAccent
+                      : goalDifference < 0
+                      ? Colors.redAccent
+                      : Colors.grey[600],
+                ),
+                // Points
+                SizedBox(
+                  width: 32.w,
+                  child: Text(
+                    '${standing.points}',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: isTopThree ? colorScheme.primary : Colors.white,
+                      fontSize: 13.sp,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 4.w),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

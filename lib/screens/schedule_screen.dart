@@ -82,14 +82,59 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     });
   }
 
+  List<DateTime> _getAvailableDates(List<model.Match> allMatches) {
+    final datesSet = allMatches.map((m) {
+      return DateTime(m.startTime.year, m.startTime.month, m.startTime.day);
+    }).toSet();
+    final dates = datesSet.toList()..sort();
+    return dates;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MatchCubit, MatchState>(
       builder: (context, state) {
+        List<DateTime> availableDates = [];
+        if (state is MatchLoaded) {
+          availableDates = _getAvailableDates(state.matches);
+
+          // If current selected date has no matches and we have matches available,
+          // pick the first date that is today or in the future, or just the first available.
+          if (availableDates.isNotEmpty &&
+              !availableDates.any(
+                (d) =>
+                    d.year == _selectedDate.year &&
+                    d.month == _selectedDate.month &&
+                    d.day == _selectedDate.day,
+              )) {
+            // Find closest date to today among available dates
+            final now = DateTime.now();
+            final today = DateTime(now.year, now.month, now.day);
+            DateTime bestDate = availableDates.first;
+
+            // Try to find the first date >= today
+            for (var d in availableDates) {
+              if (d.isAtSameMomentAs(today) || d.isAfter(today)) {
+                bestDate = d;
+                break;
+              }
+            }
+
+            // Update selected date but avoid setState during build
+            // We use WidgetsBinding to defer the update
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() => _selectedDate = bestDate);
+              }
+            });
+          }
+        }
+
         return Column(
           children: [
             CalendarStrip(
               selectedDate: _selectedDate,
+              availableDates: availableDates,
               onDateSelected: (date) {
                 setState(() => _selectedDate = date);
               },

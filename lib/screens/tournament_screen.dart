@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/standings_cubit.dart';
@@ -108,17 +109,26 @@ class _TournamentScreenState extends State<TournamentScreen>
                           if (logoUrl != null)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8.w),
-                              child: Image.network(
-                                ApiService.getImageFullUrl(logoUrl),
+                              child: CachedNetworkImage(
+                                imageUrl: ApiService.getImageFullUrl(logoUrl),
                                 height: 64.h,
                                 width: 64.h,
                                 fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(
-                                      Icons.sports_soccer,
-                                      size: 64.h,
-                                      color: Colors.white24,
+                                placeholder: (context, url) => Container(
+                                  height: 64.h,
+                                  width: 64.h,
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Icon(
+                                  Icons.sports_soccer,
+                                  size: 64.h,
+                                  color: Colors.white24,
+                                ),
                               ),
                             )
                           else

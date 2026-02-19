@@ -4,11 +4,13 @@ import '../../utils/responsive.dart';
 
 class CalendarStrip extends StatefulWidget {
   final DateTime selectedDate;
+  final List<DateTime> availableDates;
   final Function(DateTime) onDateSelected;
 
   const CalendarStrip({
     super.key,
     required this.selectedDate,
+    required this.availableDates,
     required this.onDateSelected,
   });
 
@@ -22,17 +24,36 @@ class _CalendarStripState extends State<CalendarStrip> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelected());
+  }
+
+  @override
+  void didUpdateWidget(CalendarStrip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedDate != widget.selectedDate ||
+        oldWidget.availableDates != widget.availableDates) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelected());
+    }
+  }
+
+  void _scrollToSelected() {
+    if (_scrollController.hasClients && widget.availableDates.isNotEmpty) {
+      final index = widget.availableDates.indexWhere(
+        (d) =>
+            d.year == widget.selectedDate.year &&
+            d.month == widget.selectedDate.month &&
+            d.day == widget.selectedDate.day,
+      );
+      if (index != -1) {
         final screenWidth = MediaQuery.of(context).size.width;
-        final targetOffset = (7 * 110.w) - (screenWidth / 2) + (110.w / 2);
+        final targetOffset = (index * 100.w) - (screenWidth / 2) + (100.w / 2);
         _scrollController.animateTo(
-          targetOffset,
+          targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
         );
       }
-    });
+    }
   }
 
   @override
@@ -43,6 +64,8 @@ class _CalendarStripState extends State<CalendarStrip> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.availableDates.isEmpty) return const SizedBox.shrink();
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -52,22 +75,28 @@ class _CalendarStripState extends State<CalendarStrip> {
       child: ListView.builder(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
-        itemCount: 15,
+        itemCount: widget.availableDates.length,
         itemBuilder: (context, index) {
-          final date = today.add(Duration(days: index - 7));
-          final isSelected = date.isAtSameMomentAs(widget.selectedDate);
-          final isToday = date.isAtSameMomentAs(today);
+          final date = widget.availableDates[index];
+          final isSelected =
+              date.year == widget.selectedDate.year &&
+              date.month == widget.selectedDate.month &&
+              date.day == widget.selectedDate.day;
+          final isToday =
+              date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day;
 
           String label;
           if (isToday) {
             label = 'Today';
-          } else if (date.isAtSameMomentAs(
-            today.subtract(const Duration(days: 1)),
-          )) {
+          } else if (date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day - 1) {
             label = 'Yesterday';
-          } else if (date.isAtSameMomentAs(
-            today.add(const Duration(days: 1)),
-          )) {
+          } else if (date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day + 1) {
             label = 'Tomorrow';
           } else {
             label = DateFormat('EEE d MMM').format(date);
@@ -76,19 +105,24 @@ class _CalendarStripState extends State<CalendarStrip> {
           return GestureDetector(
             onTap: () => widget.onDateSelected(date),
             child: Container(
-              width: 110.w,
-              padding: EdgeInsets.symmetric(vertical: 8.h),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isSelected ? Colors.green : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-              ),
+              width: 100.w,
+              padding: EdgeInsets.symmetric(vertical: 5.h),
+              decoration: const BoxDecoration(),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
+                  if (isSelected)
+                    Positioned(
+                      bottom: 0,
+                      child: Container(
+                        width: 30.w,
+                        height: 3.h,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(2.w),
+                        ),
+                      ),
+                    ),
                   Text(
                     label,
                     textAlign: TextAlign.center,
@@ -101,7 +135,7 @@ class _CalendarStripState extends State<CalendarStrip> {
                       fontWeight: isSelected || isToday
                           ? FontWeight.bold
                           : FontWeight.w500,
-                      fontSize: 14.sp,
+                      fontSize: 12.sp,
                     ),
                   ),
                   if (isToday && !isSelected)
