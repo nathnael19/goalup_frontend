@@ -83,6 +83,17 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     return events;
   }
 
+  String _getTournamentName() {
+    final tournament = widget.match.tournament;
+    final competitionName = tournament?.competition?.name;
+    final seasonName = tournament?.name;
+
+    if (competitionName != null && seasonName != null) {
+      return "$competitionName $seasonName";
+    }
+    return competitionName ?? seasonName ?? 'MATCH DETAILS';
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -92,7 +103,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          (match.tournament?.name ?? 'MATCH DETAILS').toUpperCase(),
+          _getTournamentName().toUpperCase(),
           style: TextStyle(
             fontSize: 14.sp,
             fontWeight: FontWeight.w900,

@@ -51,17 +51,13 @@ class MatchCard extends StatelessWidget {
                   },
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.emoji_events_outlined,
-                        size: 14.sp,
-                        color: colorScheme.primary,
+                      _buildTournamentLogo(
+                        match.tournament?.competition?.imageUrl,
+                        colorScheme,
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        (match.tournament?.competition?.name ??
-                                match.tournament?.name ??
-                                'TOURNAMENT')
-                            .toUpperCase(),
+                        _getTournamentName().toUpperCase(),
                         style: TextStyle(
                           fontSize: 10.sp,
                           fontWeight: FontWeight.w900,
@@ -223,6 +219,43 @@ class MatchCard extends StatelessWidget {
             )
           : _buildLogoPlaceholder(name),
     );
+  }
+
+  Widget _buildTournamentLogo(String? logoUrl, ColorScheme colorScheme) {
+    final fullUrl = ApiService.getImageFullUrl(logoUrl);
+    if (fullUrl.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: fullUrl,
+        width: 16.w,
+        height: 16.w,
+        memCacheHeight: 40,
+        placeholder: (context, url) => SizedBox(
+          width: 16.w,
+          height: 16.w,
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 1)),
+        ),
+        errorWidget: (context, url, error) => Icon(
+          Icons.emoji_events_outlined,
+          size: 14.sp,
+          color: colorScheme.primary,
+        ),
+      );
+    }
+    return Icon(
+      Icons.emoji_events_outlined,
+      size: 14.sp,
+      color: colorScheme.primary,
+    );
+  }
+
+  String _getTournamentName() {
+    final competitionName = match.tournament?.competition?.name;
+    final seasonName = match.tournament?.name;
+
+    if (competitionName != null && seasonName != null) {
+      return "$competitionName $seasonName";
+    }
+    return competitionName ?? seasonName ?? 'TOURNAMENT';
   }
 
   Widget _buildLogoPlaceholder(String name) {

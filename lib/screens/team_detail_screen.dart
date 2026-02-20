@@ -96,7 +96,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                     fontSize: 13.sp,
                   ),
                   tabs: const [
-                    Tab(text: 'ROSTER'),
+                    Tab(text: 'SQUADS'),
                     Tab(text: 'STATS'),
                     Tab(text: 'MATCHES'),
                   ],

@@ -96,34 +96,23 @@ class MatchBillboard extends StatelessWidget {
                   ? CachedNetworkImage(
                       imageUrl: logoUrl,
                       fit: BoxFit.cover,
+                      memCacheHeight: 140, // Optimized for 70.w
+                      imageBuilder: (context, imageProvider) => Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: imageProvider,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                      errorWidget: (context, error, stackTrace) {
-                        return Center(
-                          child: Text(
-                            teamName.isNotEmpty
-                                ? teamName.substring(0, 1)
-                                : '?',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 32.sp,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        );
-                      },
+                      errorWidget: (context, error, stackTrace) =>
+                          _buildLogoPlaceholder(teamName),
                     )
-                  : Center(
-                      child: Text(
-                        teamName.isNotEmpty ? teamName.substring(0, 1) : '?',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32.sp,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
+                  : _buildLogoPlaceholder(teamName),
             ),
           ),
           SizedBox(height: 12.h),
@@ -135,6 +124,19 @@ class MatchBillboard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLogoPlaceholder(String name) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name.substring(0, 1) : '?',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 32.sp,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
