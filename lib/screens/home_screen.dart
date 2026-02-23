@@ -1,5 +1,7 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:async';
+import '../widgets/banner_ad_widget.dart';
+// ... rest of imports ...
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/notification_cubit.dart';
 import '../cubits/navigation_cubit.dart';
@@ -133,36 +135,42 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: IndexedStack(index: currentIndex, children: _screens),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: Colors.white.withValues(alpha: 0.05),
-              width: 1,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const BannerAdWidget(),
+          Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              border: Border(
+                top: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: NavigationBar(
+              selectedIndex: currentIndex,
+              height: 70.h,
+              backgroundColor: Colors.transparent,
+              onDestinationSelected: (index) {
+                context.read<NavigationCubit>().setIndex(index);
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.calendar_month_outlined),
+                  selectedIcon: Icon(Icons.calendar_month_rounded),
+                  label: 'Matches',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.newspaper_outlined),
+                  selectedIcon: Icon(Icons.newspaper),
+                  label: 'News',
+                ),
+              ],
             ),
           ),
-        ),
-        child: NavigationBar(
-          selectedIndex: currentIndex,
-          height: 70.h,
-          backgroundColor: Colors.transparent,
-          onDestinationSelected: (index) {
-            context.read<NavigationCubit>().setIndex(index);
-          },
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.calendar_month_outlined),
-              selectedIcon: Icon(Icons.calendar_month_rounded),
-              label: 'Matches',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.newspaper_outlined),
-              selectedIcon: Icon(Icons.newspaper),
-              label: 'News',
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

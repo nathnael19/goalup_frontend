@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1093513198973",
+    "project_id": "goalup-d1ef3",
+    "storage_bucket": "goalup-d1ef3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1093513198973:android:70186ae6bb3fceb33f6014",
+        "android_client_info": {
+          "package_name": "com.example.goalup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDS5k8UD7x40nnCia9MwSXMbDNJTyR6Rus"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

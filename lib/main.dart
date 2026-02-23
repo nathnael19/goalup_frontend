@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async';
 import 'cubits/match_cubit.dart';
 import 'cubits/standings_cubit.dart';
 import 'cubits/teams_cubit.dart';
@@ -7,19 +8,64 @@ import 'cubits/news_cubit.dart';
 import 'cubits/notification_cubit.dart';
 import 'cubits/navigation_cubit.dart';
 import 'cubits/player_stats_cubit.dart';
+import 'services/ad_service.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'screens/home_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+
+  // Initialize Firebase
+  try {
+    final firebaseApiKey = dotenv.env['FIREBASE_API_KEY'];
+    final firebaseAppId = dotenv.env['FIREBASE_APP_ID'];
+    final firebaseMessagingSenderId =
+        dotenv.env['FIREBASE_MESSAGING_SENDER_ID'];
+    final firebaseProjectId = dotenv.env['FIREBASE_PROJECT_ID'];
+
+    if (firebaseApiKey != null &&
+        firebaseApiKey != 'your_api_key_here' &&
+        firebaseAppId != null) {
+      await Firebase.initializeApp(
+        options: FirebaseOptions(
+          apiKey: firebaseApiKey,
+          appId: firebaseAppId,
+          messagingSenderId: firebaseMessagingSenderId ?? '',
+          projectId: firebaseProjectId ?? '',
+        ),
+      );
+      // ignore: avoid_print
+      print('Firebase initialized programmatically from .env');
+    } else {
+      await Firebase.initializeApp();
+      // ignore: avoid_print
+      print('Firebase initialized from native configuration');
+    }
+  } catch (e) {
+    // ignore: avoid_print
+    print('Firebase initialization failed: $e');
+  }
 
   final apiService = ApiService();
   final notificationService = NotificationService();
+  final adService = AdService();
+
+  // Initialize AdMob and Notifications asynchronously to avoid blocking startup
+  unawaited(adService.initialize());
+  unawaited(notificationService.init());
 
   runApp(
-    RepositoryProvider.value(
-      value: apiService,
+    MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: apiService),
+        RepositoryProvider.value(value: adService),
+      ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
@@ -55,9 +101,8 @@ class _GoalUpAppState extends State<GoalUpApp> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.notificationService.init();
-    });
+    // Notification initialization moved to main() for earlier initialization
+    // but kept here as a fallback if needed, or removed if handled in main.
   }
 
   @override
