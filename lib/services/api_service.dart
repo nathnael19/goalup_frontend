@@ -11,12 +11,12 @@ class ApiService {
   final CacheService _cacheService = CacheService();
 
   static String get baseUrl {
-    if (kIsWeb) {
-      return 'https://goalupbackend.webcode.codes/api/v1';
-    }
     if (kDebugMode) {
+      if (kIsWeb) {
+        return 'http://localhost:8000/api/v1';
+      }
       if (defaultTargetPlatform == TargetPlatform.android) {
-        return 'https://goalupbackend.webcode.codes/api/v1';
+        return 'http://10.0.2.2:8000/api/v1';
       }
       return 'http://localhost:8000/api/v1';
     }
