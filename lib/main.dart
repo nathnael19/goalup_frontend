@@ -11,6 +11,7 @@ import 'cubits/player_stats_cubit.dart';
 import 'services/ad_service.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
+import 'services/realtime_service.dart';
 import 'screens/home_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -98,11 +99,45 @@ class GoalUpApp extends StatefulWidget {
 }
 
 class _GoalUpAppState extends State<GoalUpApp> {
+  late final RealtimeService _realtimeService;
+
   @override
   void initState() {
     super.initState();
     // Notification initialization moved to main() for earlier initialization
     // but kept here as a fallback if needed, or removed if handled in main.
+
+    _realtimeService = RealtimeService(
+      apiService: RepositoryProvider.of<ApiService>(context),
+    );
+    _realtimeService.start(
+      onEvent: (event) {
+        if (event['type'] != 'entity_changed') return;
+        final entity = (event['entity'] ?? '').toString().toLowerCase();
+
+        // Force-refresh the main public datasets. This keeps "everything" up-to-date
+        // with minimal client-side complexity.
+        if (entity == 'matches') {
+          context.read<MatchCubit>().fetchMatches(forceRefresh: true);
+        } else if (entity == 'standings') {
+          context.read<StandingsCubit>().fetchStandings(forceRefresh: true);
+        } else if (entity == 'teams') {
+          context.read<TeamsCubit>().fetchTeams(forceRefresh: true);
+        } else if (entity == 'news') {
+          context.read<NewsCubit>().fetchNews(forceRefresh: true);
+        } else if (entity == 'notifications') {
+          context.read<NotificationCubit>().fetchNotifications(forceRefresh: true);
+        } else if (entity == 'tournaments' || entity == 'competitions' || entity == 'players') {
+          // These are typically refreshed when entering screens; keep it simple for now.
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _realtimeService.stop();
+    super.dispose();
   }
 
   @override
